@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg"
+    data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
+
+<head>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
+    <meta content="Themesbrand" name="author" />
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="assets/images/favicon.ico">
+
+    <!-- Sweet Alert css-->
+    <link href="assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- Layout config Js -->
+    <script src="assets/js/layout.js"></script>
+    <!-- Bootstrap Css -->
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <!-- App Css-->
+    <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
+    <!-- custom Css-->
+    <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+    <!-- Begin page -->
+    <div id="layout-wrapper">
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">Gestion des utilisateurs</h4>
+                    </div>
+
+                    <div class="card-body">
+                              <!-- Messages flash -->
+
+
+
+    <% if (success) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-line me-2"></i>
+        <%= success %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <% } %>
+
+    <% if (error) { %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-2"></i>
+        <%= error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <% } %>
+                        <div class="listjs-table" id="userList">
+                            <div class="row g-4 mb-3">
+                                <div class="col-sm-auto">
+                                    <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                                        data-bs-target="#addUserModal">
+                                        <i class="ri-add-line align-bottom me-1"></i> Ajouter
+                                    </button>
+                                </div>
+                                <div class="col-sm">
+                                    <div class="d-flex justify-content-sm-end">
+                                        <div class="search-box ms-2">
+                                            <input type="text" id="searchInput" class="form-control search"
+                                                placeholder="Rechercher par nom, prénom ou email...">
+                                            <i class="ri-search-line search-icon"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive table-card mt-3 mb-1">
+                                <table class="table align-middle table-nowrap">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="sort">ID</th>
+                                            <th class="sort">Nom</th>
+                                            <th class="sort">Prénom</th>
+                                            <th class="sort">Username</th>
+                                            <th class="sort">Rôle</th>
+                                            <th class="sort">Code</th>
+                                            <th class="sort">Statut</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (users.length> 0) { %>
+                                            <% users.forEach(user=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= user.id %>
+                                                    </td>
+                                                    <td>
+                                                        <%= user.nom %>
+                                                    </td>
+                                                    <td>
+                                                        <%= user.prenom %>
+                                                    </td>
+                                                    <td>
+                                                        <%= user.username %>
+                                                    </td>
+                                                    <td>
+                                                        <%= (()=> {
+                                                            try {
+                                                            if (Array.isArray(user.roles)) return user.roles.join(', ');
+                                                            if (typeof user.roles === 'string') {
+                                                            // Cas: une simple chaîne (ex: "role_global")
+                                                            if (!user.roles.trim().startsWith('[')) return user.roles;
+                                                            // Cas: chaîne JSON valide
+                                                            return JSON.parse(user.roles).join(', ');
+                                                            }
+                                                            return 'ROLE_USER';
+                                                            } catch (e) {
+                                                            return 'ROLE_USER';
+                                                            }
+                                                            })() %>
+                                                    </td>
+                                                    <td>
+                                                        <%= user.code || ' -' %>
+                                                        </td>
+                                                    <td>
+                                                        <% if (user.statut==='1' || user.statut===1) { %>
+                                                            <span class="badge bg-success-subtle text-success text-uppercase">Actif</span>
+                                                            <% } else { %>
+                                                                <span class="badge bg-danger-subtle text-danger text-uppercase">Désactivé</span>
+                                                                <% } %>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex gap-2">
+                                                            <button class="btn btn-sm btn-success"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#editUserModal-<%= user.id %>">Modifier</button>
+                                                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                                                    data-bs-target="#resetPasswordModal-<%= user.id %>">Renitialiser MP</button>
+                                                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                                                data-bs-target="#deleteRecordModal-<%= user.id %>">Désactiver</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <!-- Modal édition -->
+                                                <div class="modal fade" id="editUserModal-<%= user.id %>" tabindex="-1">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <form method="POST" action="/users/edit/<%= user.id %>">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Modifier <%= user.nom %>
+                                                                            <%= user.prenom %>
+                                                                    </h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <!-- Champs de base -->
+                                                                    <input type="text" name="nom" value="<%= user.nom %>" class="form-control mb-2" placeholder="Nom"
+                                                                        required>
+                                                                    <input type="text" name="prenom" value="<%= user.prenom %>" class="form-control mb-2"
+                                                                        placeholder="Prénom" required>
+                                                                    <input type="email" name="email" value="<%= user.email %>" class="form-control mb-2"
+                                                                        placeholder="Email" required>
+                                                
+                                                                    <!-- Sélection du rôle -->
+                                                                    <select name="roles" id="editRoleSelect-<%= user.id %>" class="form-control mb-2" required>
+                                                                        <option value="">-- Choisir un rôle --</option>
+                                                                        <option value="ROLE_GLOBAL" <%=user.roles.includes('ROLE_GLOBAL') ? 'selected' : '' %>>Global
+                                                                        </option>
+                                                                        <option value="ROLE_REGIONAL" <%=user.roles.includes('ROLE_REGIONAL') ? 'selected' : '' %>
+                                                                            >Régional</option>
+                                                                        <option value="ROLE_DEPARTEMENTAL" <%=user.roles.includes('ROLE_DEPARTEMENTAL') ? 'selected'
+                                                                            : '' %>>Départemental</option>
+                                                                        <option value="ROLE_COMMUNAL" <%=user.roles.includes('ROLE_COMMUNAL') ? 'selected' : '' %>
+                                                                            >Communal</option>
+                                                                    </select>
+                                                
+                                                                    <!-- Champs dynamiques pour la localisation -->
+                                                                    <div id="editRegionContainer-<%= user.id %>" class="mb-2" style="display:none;">
+                                                                        <label>Région</label>
+                                                                        <select id="editRegionSelect-<%= user.id %>" name="region_id" class="form-control">
+                                                                            <option value="">-- Sélectionner une région --</option>
+                                                                        </select>
+                                                                    </div>
+                                                
+                                                                    <div id="editDepartementContainer-<%= user.id %>" class="mb-2" style="display:none;">
+                                                                        <label>Département</label>
+                                                                        <select id="editDepartementSelect-<%= user.id %>" name="departement_id" class="form-control">
+                                                                            <option value="">-- Sélectionner un département --</option>
+                                                                        </select>
+                                                                    </div>
+                                                
+                                                                    <div id="editCommuneContainer-<%= user.id %>" class="mb-2" style="display:none;">
+                                                                        <label>Commune</label>
+                                                                        <select id="editCommuneSelect-<%= user.id %>" name="commune_id" class="form-control">
+                                                                            <option value="">-- Sélectionner une commune --</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fermer</button>
+                                                                    <button type="submit" class="btn btn-success">Enregistrer</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Reset password modal -->
+                                                <div class="modal fade zoomIn" id="resetPasswordModal-<%= user.id %>" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <form action="/users/<%= user.id %>/reset-password" method="POST">
+                                                                <div class="modal-header">
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                                                                        id="btn-close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <div class="mt-2 text-center">
+                                                                        <lord-icon src="https://cdn.lordicon.com/umnbegnd.json" trigger="loop" delay="2000" style="width:250px;height:250px">
+                                                                        </lord-icon>
+                                                                        <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                                                                            <h4>Etes vous sure ?</h4>
+                                                                            <p class="text-muted mx-4 mb-0">Voulez-vous
+                                                                                rénitialiser le mot de passe de cet utilisateur
+                                                                                ?</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                                                                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Fermer</button>
+                                                                        <button type="submit" class="btn w-sm btn-danger " id="delete-record">Oui,
+                                                                            Rénitialiser!</button>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--Deactivate modal-->
+                                                <div class="modal fade zoomIn" id="deleteRecordModal-<%= user.id %>"
+                                                    tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <form method="GET" action="/users/desactivate/<%= user.id %>">
+                                                                <div class="modal-header">
+                                                                    <button type="button" class="btn-close"
+                                                                        data-bs-dismiss="modal" aria-label="Close"
+                                                                        id="btn-close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <div class="mt-2 text-center">
+                                                                        <lord-icon src="https://cdn.lordicon.com/fgxwhgfp.json" trigger="loop" delay="2000" style="width:250px;height:250px">
+                                                                        </lord-icon>
+                                                                        <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                                                                            <h4>Etes vous sure ?</h4>
+                                                                            <p class="text-muted mx-4 mb-0">Voulez-vous
+                                                                                desactiver cet utilisateur
+                                                                                ?</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div
+                                                                        class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                                                                        <button type="button" class="btn w-sm btn-light"
+                                                                            data-bs-dismiss="modal">Fermer</button>
+                                                                        <button type="submit"
+                                                                            class="btn w-sm btn-danger "
+                                                                            id="delete-record">Oui,
+                                                                            Desactiver!</button>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                            </div>
+                            <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="7" class="text-center">Aucun
+                                            utilisateur
+                                            trouvé.</td>
+                                    </tr>
+                                    <% } %>
+                                        </tbody>
+                                        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'ajout -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="/users/register">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Ajouter un utilisateur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" name="nom" placeholder="Nom" class="form-control mb-2" required>
+                        <input type="text" name="prenom" placeholder="Prénom" class="form-control mb-2" required>
+                        <input type="email" name="email" placeholder="Email" class="form-control mb-2" required>
+                        <input type="password" name="password" class="form-control mb-2" hidden >
+                        <input type="text" name="username" class="form-control mb-2" hidden>
+
+                        <select name="roles" id="roleSelect" class="form-control mb-2" required>
+                            <option value="">-- Choisir un rôle --</option>
+                            <option value="ROLE_GLOBAL">Global</option>
+                            <option value="ROLE_REGIONAL">Régional</option>
+                            <option value="ROLE_DEPARTEMENTAL">Départemental</option>
+                            <option value="ROLE_COMMUNAL">Communal</option>
+                        </select>
+
+                        <!-- Champs dynamiques -->
+                        <div id="regionContainer" class="mb-2" style="display:none;">
+                            <label>Région</label>
+                            <select id="regionSelect" name="region_id" class="form-control"></select>
+                        </div>
+
+                        <div id="departementContainer" class="mb-2" style="display:none;">
+                            <label>Département</label>
+                            <select id="departementSelect" name="departement_id" class="form-control"></select>
+                        </div>
+
+                        <div id="communeContainer" class="mb-2" style="display:none;">
+                            <label>Commune</label>
+                            <select id="communeSelect" name="commune_id" class="form-control"></select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fermer</button>
+                        <button type="submit" class="btn btn-success">Ajouter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+
+
+    <!-- JAVASCRIPT -->
+
+    <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/libs/simplebar/simplebar.min.js"></script>
+    <script src="assets/libs/node-waves/waves.min.js"></script>
+    <script src="assets/libs/feather-icons/feather.min.js"></script>
+    <script src="assets/js/pages/plugins/lord-icon-2.1.0.js"></script>
+    <script src="assets/js/plugins.js"></script>
+    <!-- prismjs plugin -->
+    <script src="assets/libs/prismjs/prism.js"></script>
+    <script src="assets/libs/list.js/list.min.js"></script>
+    <script src="assets/libs/list.pagination.js/list.pagination.min.js"></script>
+
+    <!-- listjs init -->
+    <script src="assets/js/pages/listjs.init.js"></script>
+
+    <!-- Sweet Alerts js -->
+    <script src="assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+    <!-- App js -->
+    <script src="assets/js/app.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const roleSelect = document.getElementById("roleSelect");
+            const regionContainer = document.getElementById("regionContainer");
+            const departementContainer = document.getElementById("departementContainer");
+            const communeContainer = document.getElementById("communeContainer");
+
+            const regionSelect = document.getElementById("regionSelect");
+            const departementSelect = document.getElementById("departementSelect");
+            const communeSelect = document.getElementById("communeSelect");
+
+            console.log("Gestion des rôles initialisée");
+
+            // Fonction pour afficher/masquer les champs selon le rôle
+            function updateRoleFields(role) {
+                console.log("Mise à jour des champs pour le rôle :", role);
+
+                // Masquer tous les champs d'abord
+                regionContainer.style.display = "none";
+                departementContainer.style.display = "none";
+                communeContainer.style.display = "none";
+
+                // Réinitialiser les sélections
+                regionSelect.innerHTML = '<option value="">-- Sélectionner une région --</option>';
+                departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+                communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+
+                // Afficher les champs selon le rôle
+                switch (role) {
+                    case "ROLE_REGIONAL":
+                        regionContainer.style.display = "block";
+                        loadRegions();
+                        break;
+
+                    case "ROLE_DEPARTEMENTAL":
+                        regionContainer.style.display = "block";
+                        departementContainer.style.display = "block";
+                        loadRegions();
+                        break;
+
+                    case "ROLE_COMMUNAL":
+                        regionContainer.style.display = "block";
+                        departementContainer.style.display = "block";
+                        communeContainer.style.display = "block";
+                        loadRegions();
+                        break;
+
+                    case "ROLE_GLOBAL":
+                    default:
+                        // Rien à afficher
+                        break;
+                }
+            }
+
+            // Événement changement de rôle
+            roleSelect.addEventListener("change", function () {
+                const role = this.value.trim();
+                console.log("🌀 Rôle sélectionné :", role);
+                updateRoleFields(role);
+            });
+
+            // Événement changement de région
+            regionSelect.addEventListener("change", async function () {
+                const regionId = this.value;
+                if (!regionId) {
+                    departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+                    communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+                    return;
+                }
+                console.log("Région sélectionnée :", regionId);
+                await loadDepartements(regionId);
+            });
+
+            // Événement changement de département
+            departementSelect.addEventListener("change", async function () {
+                const depId = this.value;
+                if (!depId) {
+                    communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+                    return;
+                }
+                console.log("Département sélectionné :", depId);
+                await loadCommunes(depId);
+            });
+
+            // Fonctions AJAX
+            async function loadRegions() {
+                try {
+                    console.log("Chargement des régions...");
+                    const res = await fetch("/api/loc/regions");
+
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    console.log("Données régions reçues:", data);
+
+                    regionSelect.innerHTML = '<option value="">-- Sélectionner une région --</option>';
+                    data.forEach(r => {
+                        regionSelect.innerHTML += `<option value="${r.id}">${r.libelle}</option>`;
+                    });
+                    console.log("Régions chargées :", data.length);
+                } catch (e) {
+                    console.error("Erreur chargement régions :", e);
+                    regionSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                }
+            }
+
+            async function loadDepartements(regionId) {
+                try {
+                    console.log("Chargement des départements pour région:", regionId);
+                    const res = await fetch(`/api/loc/departements/${regionId}`);
+
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    console.log("Données départements reçues:", data);
+
+                    departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+                    data.forEach(d => {
+                        departementSelect.innerHTML += `<option value="${d.id}">${d.libelle}</option>`;
+                    });
+                    console.log("Départements chargés :", data.length);
+                } catch (e) {
+                    console.error("Erreur chargement départements :", e);
+                    departementSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                }
+            }
+
+            async function loadCommunes(depId) {
+                try {
+                    console.log("Chargement des communes pour département:", depId);
+                    const res = await fetch(`/api/loc/communes/${depId}`);
+
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    console.log("✅ Données communes reçues:", data);
+
+                    communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+                    data.forEach(c => {
+                        communeSelect.innerHTML += `<option value="${c.id}">${c.libelle}</option>`;
+                    });
+                    console.log("✅ Communes chargées :", data.length);
+                } catch (e) {
+                    console.error("❌ Erreur chargement communes :", e);
+                    communeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                }
+            }
+
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+
+             const searchInput = document.getElementById('searchInput');
+            const userTableBody = document.querySelector('tbody');
+
+            let searchTimeout;
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchTimeout);
+                const searchTerm = this.value.trim();
+
+                // Délai de 500ms avant la recherche (pour éviter trop de requêtes)
+                searchTimeout = setTimeout(() => {
+                    if (searchTerm.length === 0 || searchTerm.length >= 2) {
+                        searchUsers(searchTerm);
+                    }
+                }, 500);
+            });
+
+            async function searchUsers(searchTerm) {
+                try {
+                    const url = searchTerm ? `/users/search?search=${encodeURIComponent(searchTerm)}` : '/users';
+                    const response = await fetch(url);
+                    const html = await response.text();
+
+                    // Extraire le tableau des utilisateurs du HTML retourné
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTableBody = doc.querySelector('tbody');
+
+                    if (newTableBody) {
+                        userTableBody.innerHTML = newTableBody.innerHTML;
+                    }
+
+                    // Mettre à jour le compteur des résultats
+                    updateResultsCount(searchTerm);
+
+                } catch (error) {
+                    console.error('Erreur lors de la recherche:', error);
+                }
+            }
+
+            function updateResultsCount(searchTerm) {
+                const rows = document.querySelectorAll('tbody tr');
+                let actualResults = 0;
+
+                // Compter seulement les lignes qui ont des données utilisateur (pas le message "Aucun résultat")
+                rows.forEach(row => {
+                    const firstCell = row.cells[0];
+                    // Si la première cellule n'est pas un colspan, c'est une ligne de données
+                    if (firstCell && !firstCell.hasAttribute('colspan')) {
+                        actualResults++;
+                    }
+                });
+
+                const countElement = document.getElementById('resultsCount') || createResultsCountElement();
+
+                if (searchTerm && searchTerm.length >= 2) {
+                    if (actualResults > 0) {
+                        countElement.textContent = `${actualResults} résultat(s) trouvé(s) pour "${searchTerm}"`;
+                        countElement.className = 'alert alert-info mt-3';
+                    } else {
+                        countElement.textContent = `Aucun résultat trouvé pour "${searchTerm}"`;
+                        countElement.className = 'alert alert-warning mt-3';
+                    }
+                    countElement.style.display = 'block';
+                } else {
+                    countElement.style.display = 'none';
+                }
+            }
+
+            function createResultsCountElement() {
+                const countElement = document.createElement('div');
+                countElement.id = 'resultsCount';
+                countElement.className = 'alert alert-info mt-3';
+                countElement.style.display = 'none';
+
+                const tableContainer = document.querySelector('.table-responsive');
+                tableContainer.parentNode.insertBefore(countElement, tableContainer);
+
+                return countElement;
+            }
+
+             
+            // Écouter l'ouverture des modaux de modification
+            document.querySelectorAll('[id^="editUserModal-"]').forEach(modalElement => {
+                modalElement.addEventListener('show.bs.modal', function (event) {
+                    const modalId = this.id;
+                    const userId = modalId.replace('editUserModal-', '');
+
+                    console.log(`🔄 Initialisation du modal pour l'utilisateur ${userId}`);
+                    initializeEditModal(userId);
+                });
+            });
+
+            function initializeEditModal(userId) {
+                const roleSelect = document.getElementById(`editRoleSelect-${userId}`);
+                const regionContainer = document.getElementById(`editRegionContainer-${userId}`);
+                const departementContainer = document.getElementById(`editDepartementContainer-${userId}`);
+                const communeContainer = document.getElementById(`editCommuneContainer-${userId}`);
+
+                const regionSelect = document.getElementById(`editRegionSelect-${userId}`);
+                const departementSelect = document.getElementById(`editDepartementSelect-${userId}`);
+                const communeSelect = document.getElementById(`editCommuneSelect-${userId}`);
+
+                if (!roleSelect || !regionContainer) {
+                    console.error(`❌ Éléments non trouvés pour l'utilisateur ${userId}`);
+                    return;
+                }
+
+                // Fonction pour mettre à jour les champs selon le rôle
+                async function updateEditRoleFields(role) {
+                    console.log(`🔄 Mise à jour des champs pour le rôle: ${role}, utilisateur: ${userId}`);
+
+                    // Masquer tous les champs d'abord
+                    regionContainer.style.display = "none";
+                    departementContainer.style.display = "none";
+                    communeContainer.style.display = "none";
+
+                    // Réinitialiser les sélections
+                    regionSelect.innerHTML = '<option value="">-- Sélectionner une région --</option>';
+                    departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+                    communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+
+                    // Afficher les champs selon le rôle
+                    switch (role) {
+                        case "ROLE_REGIONAL":
+                            regionContainer.style.display = "block";
+                            await loadEditRegions(userId);
+                            break;
+
+                        case "ROLE_DEPARTEMENTAL":
+                            regionContainer.style.display = "block";
+                            departementContainer.style.display = "block";
+                            await loadEditRegions(userId);
+                            break;
+
+                        case "ROLE_COMMUNAL":
+                            regionContainer.style.display = "block";
+                            departementContainer.style.display = "block";
+                            communeContainer.style.display = "block";
+                            await loadEditRegions(userId);
+                            break;
+
+                        case "ROLE_GLOBAL":
+                        default:
+                            // Rien à afficher
+                            break;
+                    }
+                }
+
+                // Événement changement de rôle dans l'édition
+                roleSelect.addEventListener("change", async function () {
+                    const role = this.value.trim();
+                    console.log(`🌀 Rôle sélectionné (édition): ${role}`);
+                    await updateEditRoleFields(role);
+                });
+
+                // Événement changement de région dans l'édition
+                regionSelect.addEventListener("change", async function () {
+                    const regionId = this.value;
+                    if (!regionId) {
+                        departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+                        communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+                        return;
+                    }
+                    console.log(`➡️ Région sélectionnée (édition): ${regionId}`);
+                    await loadEditDepartements(userId, regionId);
+                });
+
+                // Événement changement de département dans l'édition
+                departementSelect.addEventListener("change", async function () {
+                    const depId = this.value;
+                    if (!depId) {
+                        communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+                        return;
+                    }
+                    console.log(`➡️ Département sélectionné (édition): ${depId}`);
+                    await loadEditCommunes(userId, depId);
+                });
+
+                // Initialiser les champs selon le rôle actuel
+                const currentRole = roleSelect.value;
+                console.log(`🎯 Rôle actuel de l'utilisateur ${userId}: ${currentRole}`);
+                updateEditRoleFields(currentRole);
+            }
+
+            // Fonctions AJAX pour l'édition
+            async function loadEditRegions(userId) {
+                try {
+                    console.log(`📡 Chargement des régions pour l'édition (user: ${userId})`);
+                    const res = await fetch("/api/regions");
+
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+                    const data = await res.json();
+                    const regionSelect = document.getElementById(`editRegionSelect-${userId}`);
+
+                    regionSelect.innerHTML = '<option value="">-- Sélectionner une région --</option>';
+                    data.forEach(r => {
+                        regionSelect.innerHTML += `<option value="${r.id}">${r.libelle}</option>`;
+                    });
+
+                    console.log(`✅ Régions chargées pour l'édition: ${data.length}`);
+
+                    // Pré-sélectionner la région actuelle de l'utilisateur si elle existe
+                    // Vous devrez passer cette information depuis le serveur
+                    // const currentRegionId = ...; // À récupérer depuis les données utilisateur
+
+                } catch (e) {
+                    console.error(`❌ Erreur chargement régions (édition):`, e);
+                }
+            }
+
+            async function loadEditDepartements(userId, regionId) {
+                try {
+                    console.log(`📡 Chargement des départements pour région ${regionId} (user: ${userId})`);
+                    const res = await fetch(`/api/departements/${regionId}`);
+
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+                    const data = await res.json();
+                    const departementSelect = document.getElementById(`editDepartementSelect-${userId}`);
+
+                    departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+                    data.forEach(d => {
+                        departementSelect.innerHTML += `<option value="${d.id}">${d.libelle}</option>`;
+                    });
+
+                    console.log(`✅ Départements chargés pour l'édition: ${data.length}`);
+
+                } catch (e) {
+                    console.error(`❌ Erreur chargement départements (édition):`, e);
+                }
+            }
+
+            async function loadEditCommunes(userId, depId) {
+                try {
+                    console.log(`📡 Chargement des communes pour département ${depId} (user: ${userId})`);
+                    const res = await fetch(`/api/communes/${depId}`);
+
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+                    const data = await res.json();
+                    const communeSelect = document.getElementById(`editCommuneSelect-${userId}`);
+
+                    communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+                    data.forEach(c => {
+                        communeSelect.innerHTML += `<option value="${c.id}">${c.libelle}</option>`;
+                    });
+
+                    console.log(`✅ Communes chargées pour l'édition: ${data.length}`);
+
+                } catch (e) {
+                    console.error(`❌ Erreur chargement communes (édition):`, e);
+                }
+            }
+
+        });
+    </script>
+
+</body>
+
+</html>

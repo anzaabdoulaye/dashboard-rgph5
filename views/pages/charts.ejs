@@ -1,0 +1,1020 @@
+<div id="loader" class="loader-overlay hidden">
+  <div class="spinner"></div>
+</div>
+<style>
+/* Overlay sombre */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Cacher l'overlay */
+.hidden {
+  display: none !important;
+}
+
+/* Le spinner */
+.spinner {
+  width: 55px;
+  height: 55px;
+  border: 6px solid #ddd;
+  border-top-color: #12A537; 
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+/* Animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pie-container {
+    width: 350px;
+    height: 350px;
+    margin: 0 auto;
+}
+
+.pie-container canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+</style>
+
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+			<h4 class="mb-sm-0">Tableau de bord du RGPH-5</h4>
+			<div class="page-title-right">
+				<ol class="breadcrumb m-0">
+					<li class="breadcrumb-item active">Graphiques</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+	
+	<div class="col-12">
+		<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent p-3 rounded shadow-sm">
+			<div class="row g-3 w-100">
+				<div class="row">
+					<!-- Région -->
+					<div class="col-3">
+						<label>Région</label>
+						<% if (user.canChangeRegion) { %>
+							<select id="region" class="form-select">
+								<option value="">-- Sélectionner --</option>
+								<% selects.regions.forEach(region => { %>
+									<option value="<%= region.code_region %>"><%= region.region %></option>
+								<% }); %>
+							</select>
+						<% } else { %>
+							<% const defaultRegion = user.defaultRegion || selects.regions[0]?.code_region || ''; %>
+							<% const defaultRegionName = selects.regions[0]?.region || 'Région non disponible'; %>
+							<input type="hidden" id="region" value="<%= defaultRegion %>">
+							<div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+								<%= defaultRegionName %>
+							</div>
+						<% } %>
+					</div>
+					
+					<!-- Département -->
+					<div class="col-3">
+						<label>Département</label>
+						<% if (user.canChangeDepartement) { %>
+							<select id="departement" class="form-select">
+								<option value="">-- Sélectionner --</option>
+							</select>
+						<% } else { %>
+							<% const defaultDept = user.defaultDepartement || selects.departements[0]?.code_departement || ''; %>
+							<% const defaultDeptName = selects.departements[0]?.departement || 'Département non disponible'; %>
+							<input type="hidden" id="departement" value="<%= defaultDept %>">
+							<div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+								<%= defaultDeptName %>
+							</div>
+						<% } %>
+					</div>
+					
+					<!-- Commune -->
+					<div class="col-3">
+						<label>Commune</label>
+						<% if (user.canChangeCommune) { %>
+							<select id="commune" class="form-select">
+								<option value="">-- Sélectionner --</option>
+							</select>
+						<% } else { %>
+							<% const defaultCommune = user.defaultCommune || selects.communes[0]?.code_commune || ''; %>
+							<% const defaultCommuneName = selects.communes[0]?.commune || 'Commune non disponible'; %>
+							<input type="hidden" id="commune" value="<%= defaultCommune %>">
+							<div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+								<%= defaultCommuneName %>
+							</div>
+						<% } %>
+					</div>
+					
+					<!-- ZD -->
+					<div class="col-3">
+						<label>Zone de dénombrement (ZD)</label>
+						<select id="zd" class="form-select">
+							<option value="">-- Sélectionner --</option>
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-xl-6">
+		<div class="card">
+			<div class="card-header">
+				<h4 class="card-title mb-0">PYRAMIDE DES ÂGES</h4>
+			</div>
+			<div class="card-body">
+				<canvas id="chartPyramide"></canvas>
+			</div>
+		</div>
+	</div>
+   
+	<div class="col-xl-6">
+		<div class="card">
+			<div class="card-header">
+				<h4 class="card-title mb-0">RÉPARTITION PAR SEXE</h4>
+			</div>
+			<div class="card-body">
+				<canvas id="genderChart"></canvas>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-xl-6">
+		<div class="card">
+			<div class="card-header">
+				<h4 class="card-title mb-0">PROGRESSION DE LA COLLECTE</h4>
+			</div>
+			<div class="card-body pie-container">
+				<canvas id="popChartPie"></canvas>
+			</div>
+		</div>
+	</div>
+	
+	<div class="col-xl-6">
+		<div class="card">
+			<div class="card-header">
+				<h4 class="card-title mb-0">POPULATION PAR RÉGION</h4>
+			</div>
+			<div class="card-body pie-container">
+				<canvas id="popChartBarRegions"></canvas>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+// Variables globales pour les graphiques
+let genderChart = null;
+let pyramideChart = null;
+let popChartPie = null;
+let popChartBarRegions = null;
+
+// Cache intelligent avec expiration
+const SmartCache = {
+    store: {},
+    expiration: {},
+    TTL: 5 * 60 * 1000, // 5 minutes
+
+    async fetch(url) {
+        const cacheKey = url;
+        const now = Date.now();
+        
+        // Vérifier si le cache est valide
+        if (this.store[cacheKey] && this.expiration[cacheKey] > now) {
+            console.log('✅ Cache hit:', url);
+            return this.store[cacheKey];
+        }
+        
+        console.log('📥 Fetching:', url);
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
+            
+            const data = await res.json();
+            
+            // Stocker dans le cache avec expiration
+            this.store[cacheKey] = data;
+            this.expiration[cacheKey] = now + this.TTL;
+            
+            return data;
+        } catch (error) {
+            console.error('❌ Fetch error:', error);
+            throw error;
+        }
+    },
+    
+    clear() {
+        this.store = {};
+        this.expiration = {};
+    }
+};
+
+// Fonctions utilitaires
+function showLoader() {
+    const loader = document.getElementById("loader");
+    if (loader) loader.classList.remove("hidden");
+}
+
+function hideLoader() {
+    const loader = document.getElementById("loader");
+    if (loader) loader.classList.add("hidden");
+}
+
+function debounce(fn, delay = 300) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+    };
+}
+
+function resetSelect(select, placeholder = "-- Sélectionner --") {
+    if (!select || select.tagName !== 'SELECT') return;
+    select.innerHTML = '';
+    const option = new Option(placeholder, "");
+    select.appendChild(option);
+}
+
+function populateSelect(select, items, valueField, textField) {
+    if (!select || select.tagName !== 'SELECT') return;
+    
+    resetSelect(select);
+    if (items && items.length > 0) {
+        items.forEach(item => {
+            const option = new Option(item[textField], item[valueField]);
+            select.appendChild(option);
+        });
+        select.disabled = false;
+    } else {
+        select.disabled = true;
+    }
+}
+
+// Fonction pour récupérer la valeur d'un select (gère aussi les inputs hidden)
+function getSelectValue(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) return '';
+    
+    if (element.tagName === 'INPUT' && element.type === 'hidden') {
+        return element.value || '';
+    }
+    
+    if (element.tagName === 'SELECT') {
+        return element.value || '';
+    }
+    
+    return '';
+}
+
+// Fonction principale pour mettre à jour les graphiques
+async function updateCharts(filters = {}) {
+    // Nettoyer les filtres vides
+    const cleanFilters = {};
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value && value.toString().trim() !== '') {
+            cleanFilters[key] = value;
+        }
+    });
+    
+    const queryString = new URLSearchParams(cleanFilters).toString();
+    console.log('📊 Update charts with filters:', cleanFilters);
+    
+    showLoader();
+    
+    try {
+        const stats = await SmartCache.fetch(`/stats?${queryString}&_cb=${Date.now()}`);
+        
+        // 1. GRAPHIQUE RÉPARTITION PAR SEXE
+        updateGenderChart(stats.hommes || 0, stats.femmes || 0);
+        
+        // 2. PYRAMIDE DES ÂGES
+        updatePyramidChart(stats.pyramideAges || []);
+        
+        // 3. PROGRESSION DE LA COLLECTE
+        updateProgressChart(stats.collectee || 0, stats.cartographie || 0);
+        
+        // 4. GRAPHIQUE PAR RÉGION (chargement spécifique)
+        await updateRegionsChart(cleanFilters);
+        
+    } catch (error) {
+        console.error('❌ Error updating charts:', error);
+    } finally {
+        hideLoader();
+    }
+}
+
+// Mise à jour du graphique par sexe
+function updateGenderChart(hommes, femmes) {
+    const ctx = document.getElementById("genderChart");
+    if (!ctx) return;
+    
+    const total = hommes + femmes;
+    const data = [hommes, femmes];
+    const labels = [
+        `Hommes (${total > 0 ? ((hommes / total) * 100).toFixed(1) : 0}%)`,
+        `Femmes (${total > 0 ? ((femmes / total) * 100).toFixed(1) : 0}%)`
+    ];
+    
+    if (!genderChart) {
+        genderChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ["#12A537", "#F28F00"],
+                    borderWidth: 2,
+                    borderColor: "#fff"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw || 0;
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value.toLocaleString()} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        genderChart.data.labels = labels;
+        genderChart.data.datasets[0].data = data;
+        genderChart.update();
+    }
+}
+
+// Mise à jour de la pyramide des âges
+function updatePyramidChart(pyramideData) {
+    const ctx = document.getElementById("chartPyramide");
+    if (!ctx) return;
+    
+    // Ordre des tranches d'âge
+    const ageOrder = ["0-4", "5-9", "10-14", "15-19", "20-24", "25-29", 
+                     "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", 
+                     "60-64", "65-69", "70-74", "75-79", "80+"];
+    
+    // Trier les données selon l'ordre défini
+    const sortedData = [...pyramideData].sort((a, b) => 
+        ageOrder.indexOf(a.age) - ageOrder.indexOf(b.age)
+    );
+    
+    const labels = sortedData.map(p => p.age);
+    const hommesData = sortedData.map(p => -(p.hommes || 0)); // Négatif pour l'effet pyramide
+    const femmesData = sortedData.map(p => p.femmes || 0);
+    
+    if (!pyramideChart) {
+        pyramideChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Hommes",
+                        data: hommesData,
+                        backgroundColor: "rgba(18, 165, 55, 0.8)",
+                        borderColor: "rgba(18, 165, 55, 1)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: "Femmes",
+                        data: femmesData,
+                        backgroundColor: "rgba(242, 143, 0, 0.8)",
+                        borderColor: "rgba(242, 143, 0, 1)",
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            callback: function(value) {
+                                return Math.abs(value).toLocaleString();
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: "Population"
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: "Tranche d'âge"
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || "";
+                                const value = Math.abs(context.raw || 0);
+                                return `${label}: ${value.toLocaleString()}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        pyramideChart.data.labels = labels;
+        pyramideChart.data.datasets[0].data = hommesData;
+        pyramideChart.data.datasets[1].data = femmesData;
+        pyramideChart.update();
+    }
+}
+
+// Mise à jour du graphique de progression
+function updateProgressChart(collectee, carto) {
+    const ctx = document.getElementById("popChartPie");
+    if (!ctx) return;
+    
+    const restant = Math.max(0, carto - collectee);
+    const pourcentage = carto > 0 ? ((collectee / carto) * 100).toFixed(1) : 0;
+    
+    const data = [collectee, restant];
+    const labels = [
+        `Collectée (${pourcentage}%)`,
+        `À collecter (${(100 - pourcentage).toFixed(1)}%)`
+    ];
+    
+    if (!popChartPie) {
+        popChartPie = new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ["#12A537", "#e0e0e0"],
+                    borderWidth: 2,
+                    borderColor: "#fff"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw || 0;
+                                const total = carto;
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value.toLocaleString()} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        popChartPie.data.labels = labels;
+        popChartPie.data.datasets[0].data = data;
+        popChartPie.update();
+    }
+}
+
+// Mise à jour du graphique par région
+
+async function updateRegionsChart(filters) {
+    const ctx = document.getElementById("popChartBarRegions");
+    if (!ctx) return;
+    
+    try {
+        // Nettoyer les filtres pour enlever les valeurs null/undefined
+        const cleanFilters = {};
+        for (const [key, value] of Object.entries(filters)) {
+            if (value && value !== 'all' && value !== 'null' && value !== 'undefined') {
+                cleanFilters[key] = value;
+            }
+        }
+        
+        // Construire l'URL correctement
+        const queryString = new URLSearchParams(cleanFilters).toString();
+        const url = `/charts${queryString ? `?${queryString}` : ''}`;
+        
+        console.log('📊 Fetching regions data from:', url);
+        
+        // Récupérer les données depuis la page charts
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const html = await response.text();
+        
+        // Utiliser DOMParser pour extraire les données
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Extraire les données depuis les éléments HTML ou scripts
+        const regionsData = extractRegionsDataFromHTML(doc);
+        
+        if (!regionsData || regionsData.length === 0) {
+            console.warn('⚠️ No regions data found');
+            
+            // Afficher un message si pas de données
+            if (window.popChartBarRegions) {
+                window.popChartBarRegions.destroy();
+                window.popChartBarRegions = null;
+            }
+            
+            // Optionnel: Afficher un message dans le canvas
+            ctx.style.display = 'flex';
+            ctx.style.alignItems = 'center';
+            ctx.style.justifyContent = 'center';
+            ctx.style.color = '#666';
+            ctx.style.fontStyle = 'italic';
+            ctx.innerHTML = '<div>Aucune donnée disponible pour cette sélection</div>';
+            return;
+        }
+        
+        // Préparer les données pour le graphique
+        const labels = regionsData.map(r => r.region || r.code_region || 'Inconnu');
+        const collecteeData = regionsData.map(r => r.collectee || r.populationCollectee || 0);
+        const cartoData = regionsData.map(r => r.carto || r.populationCarto || 0);
+        
+        // Si vous n'avez qu'une seule région, adapter les données
+        if (regionsData.length === 1) {
+            // Pour une seule région, on peut afficher les données détaillées
+            const region = regionsData[0];
+            console.log('📈 Single region data:', region);
+        }
+        
+        console.log('📊 Chart data:', { labels, collecteeData, cartoData });
+        
+        // Créer ou mettre à jour le graphique
+        if (!window.popChartBarRegions) {
+            window.popChartBarRegions = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "Population Collectée",
+                            data: collecteeData,
+                            backgroundColor: "rgba(18, 165, 55, 0.7)",
+                            borderColor: "rgba(18, 165, 55, 1)",
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: "Population Cartographiée",
+                            data: cartoData,
+                            backgroundColor: "rgba(242, 143, 0, 0.7)",
+                            borderColor: "rgba(242, 143, 0, 1)",
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = context.dataset.label === "Population Collectée" && 
+                                                      cartoData[context.dataIndex] > 0 ? 
+                                                      ` (${((value / cartoData[context.dataIndex]) * 100).toFixed(1)}%)` : '';
+                                    return `${label}: ${value.toLocaleString()}${percentage}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Régions",
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Population",
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            // Mettre à jour le graphique existant
+            window.popChartBarRegions.data.labels = labels;
+            window.popChartBarRegions.data.datasets[0].data = collecteeData;
+            window.popChartBarRegions.data.datasets[1].data = cartoData;
+            window.popChartBarRegions.update();
+        }
+        
+        // Restaurer le style du canvas
+        ctx.style.display = 'block';
+        ctx.style.color = '';
+        ctx.style.fontStyle = '';
+        ctx.innerHTML = '';
+        
+    } catch (error) {
+        console.error('❌ Error loading regions data:', error);
+        
+        // Afficher une erreur dans le canvas
+        const ctx = document.getElementById("popChartBarRegions");
+        if (ctx) {
+            ctx.style.display = 'flex';
+            ctx.style.alignItems = 'center';
+            ctx.style.justifyContent = 'center';
+            ctx.style.color = '#dc3545';
+            ctx.style.fontWeight = 'bold';
+            ctx.innerHTML = '<div>Erreur de chargement des données</div>';
+        }
+        
+        // Détruire le graphique en cas d'erreur
+        if (window.popChartBarRegions) {
+            window.popChartBarRegions.destroy();
+            window.popChartBarRegions = null;
+        }
+    }
+}
+
+// Fonction pour extraire les données régionales depuis le HTML
+function extractRegionsDataFromHTML(doc) {
+    try {
+        // Méthode 1: Chercher dans les scripts avec les données
+        const dataScripts = doc.querySelectorAll('script[type="application/json"]');
+        
+        for (const script of dataScripts) {
+            if (script.id === 'regions-data' || script.getAttribute('data-type') === 'regions') {
+                return JSON.parse(script.textContent);
+            }
+        }
+        
+        // Méthode 2: Chercher dans les éléments avec data-attributes
+        const regionElements = doc.querySelectorAll('[data-region]');
+        if (regionElements.length > 0) {
+            return Array.from(regionElements).map(el => ({
+                region: el.getAttribute('data-region'),
+                code_region: el.getAttribute('data-code-region'),
+                carto: parseInt(el.getAttribute('data-carto') || 0),
+                collectee: parseInt(el.getAttribute('data-collectee') || 0)
+            }));
+        }
+        
+        // Méthode 3: Chercher dans les tables ou listes
+        const tables = doc.querySelectorAll('table');
+        for (const table of tables) {
+            if (table.classList.contains('regions-data') || table.id.includes('region')) {
+                const rows = table.querySelectorAll('tbody tr');
+                const data = [];
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 3) {
+                        data.push({
+                            region: cells[0].textContent.trim(),
+                            code_region: cells[0].textContent.trim(),
+                            carto: parseInt(cells[1].textContent.replace(/\D/g, '') || 0),
+                            collectee: parseInt(cells[2].textContent.replace(/\D/g, '') || 0)
+                        });
+                    }
+                });
+                
+                if (data.length > 0) return data;
+            }
+        }
+        
+        // Méthode 4: Si vous avez des données globales (une seule région)
+        const populationCarto = doc.querySelector('[data-id="population-carto"]');
+        const populationCollectee = doc.querySelector('[data-id="population-collectee"]');
+        
+        if (populationCarto && populationCollectee) {
+            return [{
+                region: filters.region || 'Région sélectionnée',
+                code_region: filters.region || '',
+                carto: parseInt(populationCarto.textContent.replace(/\D/g, '') || 0),
+                collectee: parseInt(populationCollectee.textContent.replace(/\D/g, '') || 0)
+            }];
+        }
+        
+        return [];
+        
+    } catch (error) {
+        console.error('❌ Error extracting regions data:', error);
+        return [];
+    }
+}
+
+// Fonction d'initialisation pour appeler updateRegionsChart
+function initRegionsChart() {
+    // Récupérer les filtres initiaux
+    const filters = {
+        region: document.getElementById('region')?.value || null,
+        departement: document.getElementById('departement')?.value || null,
+        commune: document.getElementById('commune')?.value || null,
+        zd: document.getElementById('zd')?.value || null
+    };
+    
+    updateRegionsChart(filters);
+}
+
+// Attacher les événements quand le DOM est chargé
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser le graphique
+    initRegionsChart();
+    
+    // Écouter les changements de filtres
+    const filterSelects = ['region', 'departement', 'commune', 'zd'];
+    
+    filterSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            select.addEventListener('change', function() {
+                const filters = {
+                    region: document.getElementById('region')?.value || null,
+                    departement: document.getElementById('departement')?.value || null,
+                    commune: document.getElementById('commune')?.value || null,
+                    zd: document.getElementById('zd')?.value || null
+                };
+                
+                // Délai pour éviter trop de requêtes
+                clearTimeout(window.regionsChartTimeout);
+                window.regionsChartTimeout = setTimeout(() => {
+                    updateRegionsChart(filters);
+                }, 300);
+            });
+        }
+    });
+});
+// Initialisation de l'application
+document.addEventListener("DOMContentLoaded", async () => {
+    console.log('🚀 Initializing charts dashboard...');
+    
+    const regionSelect = document.getElementById('region');
+    const deptSelect = document.getElementById('departement');
+    const comSelect = document.getElementById('commune');
+    const zdSelect = document.getElementById('zd');
+    
+    const userRole = '<%= user.role %>';
+    console.log('👤 User role:', userRole);
+    
+    // Cache pour les données de localisation
+    const locationCache = {
+        departements: {},
+        communes: {},
+        zds: {}
+    };
+    
+    // Fonction pour charger les options avec cache
+    async function loadLocationOptions(url, select, valueField, textField, cacheKey = null) {
+        if (!select || select.tagName !== 'SELECT') return [];
+        
+        // Vérifier le cache
+        if (cacheKey && locationCache[cacheKey]) {
+            populateSelect(select, locationCache[cacheKey], valueField, textField);
+            return locationCache[cacheKey];
+        }
+        
+        resetSelect(select, "Chargement...");
+        select.disabled = true;
+        
+        try {
+            const data = await SmartCache.fetch(url);
+            
+            // Mettre en cache si nécessaire
+            if (cacheKey) {
+                locationCache[cacheKey] = data;
+            }
+            
+            populateSelect(select, data, valueField, textField);
+            return data;
+        } catch (error) {
+            console.error('❌ Error loading options:', error);
+            resetSelect(select, "Erreur de chargement");
+            select.disabled = true;
+            return [];
+        }
+    }
+    
+    // Initialisation selon le rôle
+    if (userRole === 'ROLE_GLOBAL' && regionSelect && regionSelect.tagName === 'SELECT') {
+        // Charger toutes les régions
+        await loadLocationOptions('/api/location/regions', regionSelect, 'code_region', 'region');
+    }
+    
+    // Précharger les données selon la région actuelle
+    const currentRegion = getSelectValue('region');
+    if (currentRegion && deptSelect && deptSelect.tagName === 'SELECT') {
+        await loadLocationOptions(
+            `/api/location/departements?region=${currentRegion}`,
+            deptSelect,
+            'code_departement',
+            'departement',
+            `dept_${currentRegion}`
+        );
+    }
+    
+    // Gestion des événements
+    const debouncedUpdateCharts = debounce(updateCharts, 300);
+    
+    // Événement pour la région (si c'est un select actif)
+    if (regionSelect && regionSelect.tagName === 'SELECT') {
+        regionSelect.addEventListener("change", async () => {
+            console.log('🔘 Region changed:', regionSelect.value);
+            
+            // Réinitialiser les niveaux inférieurs
+            if (deptSelect && deptSelect.tagName === 'SELECT') {
+                resetSelect(deptSelect);
+                resetSelect(comSelect);
+                resetSelect(zdSelect);
+            }
+            
+            // Charger les départements si une région est sélectionnée
+            if (regionSelect.value) {
+                await loadLocationOptions(
+                    `/api/location/departements?region=${regionSelect.value}`,
+                    deptSelect,
+                    'code_departement',
+                    'departement',
+                    `dept_${regionSelect.value}`
+                );
+            }
+            
+            // Mettre à jour les graphiques
+            debouncedUpdateCharts({
+                region: regionSelect.value,
+                departement: '',
+                commune: '',
+                zd: ''
+            });
+        });
+    }
+    
+    // Événement pour le département
+    if (deptSelect && deptSelect.tagName === 'SELECT') {
+        deptSelect.addEventListener("change", async () => {
+            console.log('🔘 Department changed:', deptSelect.value);
+            
+            // Réinitialiser les niveaux inférieurs
+            if (comSelect && comSelect.tagName === 'SELECT') {
+                resetSelect(comSelect);
+                resetSelect(zdSelect);
+            }
+            
+            // Charger les communes si un département est sélectionné
+            if (deptSelect.value) {
+                await loadLocationOptions(
+                    `/api/location/communes?departement=${deptSelect.value}`,
+                    comSelect,
+                    'code_commune',
+                    'commune',
+                    `com_${deptSelect.value}`
+                );
+            }
+            
+            // Mettre à jour les graphiques
+            debouncedUpdateCharts({
+                region: getSelectValue('region'),
+                departement: deptSelect.value,
+                commune: '',
+                zd: ''
+            });
+        });
+    }
+    
+    // Événement pour la commune
+    if (comSelect && comSelect.tagName === 'SELECT') {
+        comSelect.addEventListener("change", async () => {
+            console.log('🔘 Commune changed:', comSelect.value);
+            
+            // Réinitialiser les ZDs
+            if (zdSelect && zdSelect.tagName === 'SELECT') {
+                resetSelect(zdSelect);
+            }
+            
+            // Charger les ZDs si une commune est sélectionnée
+            if (comSelect.value) {
+                await loadLocationOptions(
+                    `/api/location/zds?commune=${comSelect.value}`,
+                    zdSelect,
+                    'mo_zd',
+                    'mo_zd',
+                    `zd_${comSelect.value}`
+                );
+            }
+            
+            // Mettre à jour les graphiques
+            debouncedUpdateCharts({
+                region: getSelectValue('region'),
+                departement: getSelectValue('departement'),
+                commune: comSelect.value,
+                zd: ''
+            });
+        });
+    }
+    
+    // Événement pour la ZD
+    if (zdSelect && zdSelect.tagName === 'SELECT') {
+        zdSelect.addEventListener("change", () => {
+            console.log('🔘 ZD changed:', zdSelect.value);
+            debouncedUpdateCharts({
+                region: getSelectValue('region'),
+                departement: getSelectValue('departement'),
+                commune: getSelectValue('commune'),
+                zd: zdSelect.value
+            });
+        });
+    }
+    
+    // Initialiser les graphiques avec les filtres actuels
+    const initialFilters = {
+        region: getSelectValue('region'),
+        departement: getSelectValue('departement'),
+        commune: getSelectValue('commune'),
+        zd: getSelectValue('zd')
+    };
+    
+    console.log('📊 Initial filters:', initialFilters);
+    
+    // Attendre que Chart.js soit chargé
+    if (typeof Chart === 'undefined') {
+        console.error('❌ Chart.js not loaded!');
+        return;
+    }
+    
+    // Lancer le premier chargement des graphiques
+    setTimeout(() => {
+        updateCharts(initialFilters);
+    }, 500);
+});
+</script>
+<script src="assets/libs/chart.js/chart.umd.js"></script>

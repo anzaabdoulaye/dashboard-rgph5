@@ -1,0 +1,380 @@
+<div id="loader" class="loader-overlay hidden">
+  <div class="spinner"></div>
+</div>
+<style>
+/* Overlay sombre */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Cacher l'overlay */
+.hidden {
+  display: none !important;
+}
+
+/* Le spinner */
+.spinner {
+  width: 55px;
+  height: 55px;
+  border: 6px solid #ddd;
+  border-top-color: #12A537; 
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+/* Animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pie-container {
+    width: 350px;   /* Ajuste ici */
+    height: 350px;  /* idem */
+    margin: 0 auto; /* centre le graphique */
+}
+
+.pie-container canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+
+</style>
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+			<h4 class="mb-sm-0">Tableau de bord du RGPH-5</h4>
+			<div class="page-title-right">
+				<ol class="breadcrumb m-0">
+					<li class="breadcrumb-item active">Graphiques</li>
+				</ol>
+
+			</div>
+
+		</div>
+	</div>
+	<div class="col-12">
+  <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent p-3 rounded shadow-sm">
+    <div class="row g-3 w-100">
+      
+
+
+<div class="row">
+  <div class="col-3">
+    <label>Région</label>
+    <select id="region" class="form-select">
+      <option value="">-- Sélectionner --</option>
+    </select>
+  </div>
+  <div class="col-3">
+    <label>Département</label>
+    <select id="departement" class="form-select" disabled>
+      <option value="">-- Sélectionner --</option>
+    </select>
+  </div>
+  <div class="col-3">
+    <label>Commune</label>
+    <select id="commune" class="form-select" disabled>
+      <option value="">-- Sélectionner --</option>
+    </select>
+  </div>
+  <div class="col-3">
+    <label>Zone de dénombrement (ZD)</label>
+    <select id="zd" class="form-select" disabled>
+      <option value="">-- Sélectionner --</option>
+    </select>
+  </div>
+</div>
+</div></div>
+<div class="row">
+	<div class="col-xl-6">
+		<div class="card">
+			<div class="card-header">
+				<h4 class="card-title mb-0">PYRAMIDE DES AGES</h4>
+			</div>
+			<div class="card-body">
+				<canvas id="chartPyramide" ></canvas>
+			</div>
+		</div>
+	</div>
+   <div class="col-xl-6">
+		<div class="card">
+			<div class="card-header">
+				<h4 class="card-title mb-0">Répartition de la population par sexe</h4>
+			</div>
+			<div class="card-body">
+				<canvas id="genderChart">
+</canvas>
+			</div>
+		</div>
+	</div>
+   
+ </div>
+<div class="row">
+   <div class="col-xl-6">
+		<div class="card">
+			<div class="card-header">
+				<h4 class="card-title mb-0">Population collectée par rapport à la carto</h4>
+			</div>
+			<div class="card-body pie-container">
+				<canvas id="popChartPie"></canvas>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+let genderChart = null;
+let pyramideChart = null;
+let popChartPie = null;
+  
+let debounceTimeout = null;
+let lastQuery = "";
+
+/* SMART CACHE — évite les requêtes inutiles*/
+const SmartCache = {
+    store: {},
+
+    async fetch(url) {
+        const cacheKey = url; // clé unique par combinaison de filtres
+
+        // Si la clé existe déjà → renvoyer sans appeler le backend
+        if (this.store[cacheKey]) {
+            return this.store[cacheKey];
+        }
+
+        // Fetch normal
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Erreur API : " + url);
+
+        const data = await res.json();
+
+        // Stocker en cache cette URL précise
+        this.store[cacheKey] = data;
+
+        return data;
+    }
+};
+
+
+/*LOADER*/
+function showLoader() {
+    document.getElementById("loader").classList.remove("hidden");
+}
+function hideLoader() {
+    document.getElementById("loader").classList.add("hidden");
+}
+
+/*DEBOUNCE*/
+function debounce(fn, delay = 300) {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(fn, delay);
+}
+
+/*RESET SELECT — plus rapide que innerHTML*/
+function resetSelect(select, placeholder = "-- Sélectionner --") {
+    select.replaceChildren(new Option(placeholder, ""));
+}
+
+/* UPDATE CHARTS*/
+async function updateCharts(filters = {}) {
+    const queryString = new URLSearchParams(filters).toString();
+    lastQuery = queryString;
+
+    showLoader();
+    try {
+        const stats = await SmartCache.fetch(`/stats?${queryString}`);
+        if (lastQuery !== queryString) return; // ignore anciennes requêtes
+
+        /* GRAPHIQUE PAR SEXE*/
+        const dataGender = [stats.hommes || 0, stats.femmes || 0];
+        if (!genderChart) {
+            genderChart = new Chart(document.getElementById("genderChart"), {
+                type: "bar",
+                data: {
+                    labels: ["Hommes", "Femmes"],
+                    datasets: [{ label: "Population par sexe", data: dataGender, backgroundColor: ["#12A537", "#F28F00"] }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        } else {
+            genderChart.data.datasets[0].data = dataGender;
+            genderChart.update();
+        }
+
+        /* PYRAMIDE DES ÂGES*/
+        const order = ["0-4","5-9","10-14","15-19","20-24","25-29",
+                        "30-34","35-39","40-44","45-49",
+                        "50-54","55-59","60-64","65-69","70-74",
+                        "75-79","80+"];
+        const labels = [], hommes = [], femmes = [];
+        (stats.pyramideAges || [])
+            .sort((a,b) => order.indexOf(a.age) - order.indexOf(b.age))
+            .forEach(p => { labels.push(p.age); hommes.push(-Math.abs(p.hommes||0)); femmes.push(Math.abs(p.femmes||0)); });
+
+        /* Mettre 0-4 en bas de la pyramide */
+        labels.reverse();
+        hommes.reverse();
+        femmes.reverse();
+
+        if (!pyramideChart) {
+            pyramideChart = new Chart(document.getElementById("chartPyramide"), {
+                type: "bar",
+                data: { labels, datasets: [{ label: "Hommes", data: hommes, backgroundColor: "rgba(18,165,55,0.8)" }, { label: "Femmes", data: femmes, backgroundColor: "rgba(242,143,0,0.8)" }] },
+                options: { 
+                    indexAxis: "y",
+                    stacked: true,
+                    responsive: true,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return Math.abs(value);
+                                }
+                            }
+                        },
+                        y: { stacked: true }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || "";
+                                    const value = Math.abs(context.raw || 0);
+                                    return label + ": " + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+
+            });
+        } else {
+            pyramideChart.data.labels = labels;
+            pyramideChart.data.datasets[0].data = hommes;
+            pyramideChart.data.datasets[1].data = femmes;
+            pyramideChart.update();
+        }
+
+        /* Population collectée vs cartographiée*/
+       const popCarto = stats.cartographie || 0;
+        const popCollect = stats.collectee || 0;
+
+
+        // Pie chart
+        const ctxPie = document.getElementById("popChartPie");
+        if (!popChartPie) {
+            popChartPie = new Chart(ctxPie, {
+                type: "pie",
+                data: {
+                    labels: ["Population Carto", "Population Collectée"],
+                    datasets: [{
+                        data: [popCarto, popCollect],
+                        backgroundColor: ["#12A537","#F28F00"]
+                    }]
+                },
+                options: { responsive: true }
+            });
+        } else {
+            popChartPie.data.datasets[0].data = [popCarto, popCollect];
+            popChartPie.update();
+        }
+
+
+    } catch (e) {
+        console.error("Erreur updateCharts:", e);
+    }
+    hideLoader();
+}
+
+/*INIT + FILTRES AVEC PRÉCHARGEMENT DE TOUS LES SELECTS*/
+document.addEventListener("DOMContentLoaded", async () => {
+    const regionSelect = document.getElementById('region');
+    const deptSelect   = document.getElementById('departement');
+    const comSelect    = document.getElementById('commune');
+    const zdSelect     = document.getElementById('zd');
+
+    /* Fonction pour charger options*/
+    async function loadOptions(url, select, valueField, textField) {
+        resetSelect(select, "Chargement…");
+        select.disabled = true;
+        try {
+            const data = await SmartCache.fetch(url);
+            resetSelect(select);
+            data.forEach(item => select.appendChild(new Option(item[textField], item[valueField])));
+            select.disabled = false;
+            return data;
+        } catch {
+            resetSelect(select, "Erreur");
+            select.disabled = true;
+            return [];
+        }
+    }
+
+    /* PRÉCHARGEMENT DE TOUS LES SELECTS*/
+    const regions = await loadOptions('/api/location/regions', regionSelect, 'code_region', 'region');
+    const allDepartements = {};
+    const allCommunes = {};
+    const allZDs = {};
+
+    for (const r of regions) {
+        allDepartements[r.code_region] = await SmartCache.fetch(`/api/location/departements?region=${r.code_region}`);
+        for (const d of allDepartements[r.code_region]) {
+            allCommunes[d.code_departement] = await SmartCache.fetch(`/api/location/communes?departement=${d.code_departement}`);
+            for (const c of allCommunes[d.code_departement]) {
+                allZDs[c.code_commune] = await SmartCache.fetch(`/api/location/zds?commune=${c.code_commune}`);
+            }
+        }
+    }
+
+    /* LOGIQUE DES FILTRES (avec cache)*/
+    function populateSelect(select, items, valueField, textField) {
+        resetSelect(select);
+        items.forEach(item => select.appendChild(new Option(item[textField], item[valueField])));
+        select.disabled = items.length === 0;
+    }
+
+    regionSelect.addEventListener("change", () => {
+        const deps = allDepartements[regionSelect.value] || [];
+        populateSelect(deptSelect, deps, "code_departement", "departement");
+        resetSelect(comSelect);
+        resetSelect(zdSelect);
+        debounce(() => updateCharts({ region: regionSelect.value }));
+    });
+
+    deptSelect.addEventListener("change", () => {
+        const comms = allCommunes[deptSelect.value] || [];
+        populateSelect(comSelect, comms, "code_commune", "commune");
+        resetSelect(zdSelect);
+        debounce(() => updateCharts({ region: regionSelect.value, departement: deptSelect.value }));
+    });
+
+    comSelect.addEventListener("change", () => {
+        const zds = allZDs[comSelect.value] || [];
+        populateSelect(zdSelect, zds, "mo_zd", "mo_zd");
+        debounce(() => updateCharts({ region: regionSelect.value, departement: deptSelect.value, commune: comSelect.value }));
+    });
+
+    zdSelect.addEventListener("change", () =>
+        debounce(() => updateCharts({ region: regionSelect.value, departement: deptSelect.value, commune: comSelect.value, zd: zdSelect.value }))
+    );
+
+    // Affichage initial
+    updateCharts({});
+});
+</script>
+<script src="assets/libs/chart.js/chart.umd.js"></script>
+
+

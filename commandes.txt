@@ -1,0 +1,92 @@
+----Population Carto
+select SUM(ca10t) FROM menages_rec;
+
+
+-----Population carto total par region
+SELECT 
+    SUBSTR(l.men_zd, 1, 1) AS code_region,
+    r.libelle AS region,
+    SUM(mr.ca10t) AS popCarto
+FROM `level-1` l
+JOIN region r 
+    ON r.code = SUBSTR(l.men_zd, 1, 1)
+JOIN menages_rec mr 
+    ON mr.`level-1-id` = l.`level-1-id`
+GROUP BY 
+    SUBSTR(l.men_zd, 1, 1),
+    r.libelle;
+
+
+Pour activer le rechargement automatique:npm install --save-dev nodemon
+
+Mets à jour ton package.json:  "start": "node ./bin/www",
+  "dev": "nodemon ./bin/www"
+
+Installer Sequeliez pour générer automatiquemen les models
+npm install sequelize-auto
+
+creer automatiquement les models
+npx sequelize-auto -o "./models/menage" -d menage -h localhost -u root -p 3306 -x "" -e mysql
+
+régénérer tous les modèles à chaque fois , on crée un script npm :"scripts": {
+  "gen-models": "sequelize-auto -o \"./models/menage\" -d menage -h localhost -u root -p 3306 -x \"\" -e mysql --camel --no-timestamps"
+}
+et on lance: npm run gen-models
+
+on peut aussi créer un script Node complet pour générer automatiquement tous les modèles des tables “t” de ta base menage
+
+et lancer: node generateMenageModels.js
+
+
+index
+-- ========================================
+-- 1️tmenage : index composite pour les filtres
+-- ========================================
+ALTER TABLE tmenage
+ADD INDEX idx_menage_filters_composite (code_region, code_departement, code_commune, mo_zd);
+
+-- ========================================
+-- 2 tcaracteristique : index sur level-1-id pour les JOIN
+-- =====================================
+ALTER TABLE tcaracteristique
+ADD INDEX idx_tcarac_level (`level-1-id`);
+
+-- Si tu veux accélérer les filtres combinés sur région/département/commune/ZD
+ALTER TABLE tcaracteristique
+ADD INDEX idx_tcarac_filters_composite (code_region, code_departement, code_commune, mo_zd);
+
+-- ========================================
+-- 3️ tagriculture : index sur level-1-id pour les JOIN
+-- ========================================
+ALTER TABLE tagriculture
+ADD INDEX idx_tagri_level (`level-1-id`);
+
+-- ========================================
+-- 4️ temigration : index sur level-1-id pour les JOIN
+-- ========================================
+ALTER TABLE temigration
+ADD INDEX idx_temig_level (`level-1-id`);
+
+-- ========================================
+-- 5️ Optionnel : index sur colonnes utilisées dans WHERE pour calculs spécifiques
+-- ========================================
+ALTER TABLE tmenage
+ADD INDEX idx_menage_xm13_xm30 (xm13, xm30);
+
+ALTER TABLE tmenage
+ADD INDEX idx_menage_xm01_xm40 (xm01, xm40);
+
+
+Ajouter un caching en RAM
+npm install node-cache
+
+
+-- ========================================
+-- 6 : Modification de la table user pour l'ajout des colums firsConnect et passwordChangedAt
+-- ========================================
+
+ALTER TABLE users
+ADD COLUMN firstConnect TINYINT(1) NOT NULL DEFAULT 1,
+ADD COLUMN passwordChangedAt DATETIME NULL;
+
+

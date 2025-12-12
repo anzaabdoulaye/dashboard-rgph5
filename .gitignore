@@ -1,0 +1,62 @@
+# Node / npm
+/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+/yarn.lock
+
+# Environment files (secrets)
+.env.*.local
+.local
+
+# Logs
+logs/
+*.log
+pids/
+*.pid
+*.seed
+
+# Redis dumps
+dump.rdb
+*.rdb
+
+# Runtime
+/.pnp
+.pnp.js
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+
+# Debug and profiling
+*.tgz
+*.gz
+*.cache
+
+
+# EJS template temporary files (rare)
+*.ejs.tmp
+
+
+# Misc
+coverage/
+*.local

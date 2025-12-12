@@ -1,0 +1,632 @@
+<div id="globalLoader" style="
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.5;
+">
+  <div style="text-align: center;">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+    <div style="margin-top: 10px; font-weight: bold;">Chargement...</div>
+  </div>
+</div>
+
+
+<div class="row">
+	<div class="col-12">
+		<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+			<h4 class="mb-sm-0">Tableau de bord du RGPH-5</h4>
+			<div class="page-title-right">
+				<ol class="breadcrumb m-0">
+					<li class="breadcrumb-item active">Indicateurs</li>
+				</ol>
+
+			</div>
+
+		</div>
+	</div>
+	<div class="col-12">
+  <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent p-3 rounded shadow-sm">
+    <div class="row g-3 w-100">
+      
+
+
+<div class="row">
+  <div class="col-3">
+    <label>Région</label>
+    <select id="region" class="form-select">
+      <option value="">-- Sélectionner --</option>
+      <% selects.regions.forEach(r => { %>
+        <option value="<%= r.code_region %>" <%= filters.region == r.code_region ? 'selected' : '' %>><%= r.region %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-3">
+    <label>Département</label>
+    <select id="departement" class="form-select">
+      <option value="">-- Sélectionner --</option>
+      <% selects.departements.forEach(d => { %>
+        <option value="<%= d.code_departement %>" <%= filters.departement == d.code_departement ? 'selected' : '' %>><%= d.departement %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-3">
+    <label>Commune</label>
+    <select id="commune" class="form-select">
+      <option value="">-- Sélectionner --</option>
+      <% selects.communes.forEach(c => { %>
+        <option value="<%= c.code_commune %>" <%= filters.commune == c.code_commune ? 'selected' : '' %>><%= c.commune %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-3">
+    <label>Zone de dénombrement (ZD)</label>
+    <select id="zd" class="form-select">
+      <option value="">-- Sélectionner --</option>
+      <% selects.zds.forEach(z => { %>
+        <option value="<%= z.mo_zd %>" <%= filters.zd == z.mo_zd ? 'selected' : '' %>><%= z.mo_zd %></option>
+      <% }) %>
+    </select>
+  </div>
+</div>
+
+
+
+    </div>
+  </div>
+</div>
+</div></div>
+
+<div class="row">
+<div class="col-xl-12">
+	<div class="card crm-widget">
+		<div class="card-body p-0">
+			<div class="row row-cols-xxl-6 row-cols-lg-3 row-cols-md-2 row-cols-1 g-0">
+				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+					<div class="py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">NB MEN ENUMERES
+							<i class=" ri-team-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class=" ri-team-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span id="menEnumeresSpan" class="counter-value" data-target="197"><%= stats.menages_enumeres.menages_enumeres ?? 0 %></span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+					<div class="mt-3 mt-md-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">NB MEN DENOMBRES
+							<i class="ri-team-fill text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-team-fill display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span id="menageSpan" class="counter-value"><%= stats.menagesDenombres.menagesDenombres ?? 0 %></span></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<!--
+				<div class="col">
+					<div class="py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">POP CARTO
+							<i class=" ri-team-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class=" ri-team-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span id="popSpan" class="counter-value">stats.totalPopulation ?? 0</span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div> -->
+				<!-- end col -->
+				
+				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+					<div class="mt-3 mt-md-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">TOTAL HOMMES
+							<i class=" ri-men-fill text-danger fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-men-line  display-6  text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span id="popHommesSpan" class="counter-value" data-target="32.89"><%= stats.populationSexe.hommes ?? 0 %></span></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+					<div class="mt-3 mt-lg-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">TOTAL FEMMES
+							<i class="ri-women-fill text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-women-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span id="popFemmesSpan" class="counter-value" data-target="1596.5"><%= stats.populationSexe.femmes ?? 0 %></span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+					<div class="mt-3 mt-md-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">POP TOTALE
+							<i class="ri-team-fill text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-team-fill display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span id="popTotaleSpan" class="counter-value" data-target="489.4"><%= (stats.populationSexe.hommes + stats.populationSexe.femmes) ?? 0 %></span></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+					<div class="mt-3 mt-md-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">POP RURALE
+							<i class="ri-team-fill text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-team-fill display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span id="popRuraleSpan" class="counter-value" data-target="489.4"><%= stats.populationRurale.rural ?? 0 %></span></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+					<div class="mt-3 mt-md-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">ECART NMC ET NMD
+							<i class="ri-group-fill text-danger fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-group-fill display-6  text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span id="enmcdPop" class="counter-value" data-target="32.89"><%= stats.enmcd.ecart ?? 0 %></span></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				
+			</div>
+			<!-- end row -->
+		</div>
+		<!-- end card body -->
+	</div>
+	<!-- end card -->
+</div>
+<div class="col-xl-12">
+	<div class="card crm-widget">
+		<div class="card-body p-0">
+			<div class="row row-cols-xxl-6 row-cols-lg-3 row-cols-md-2 row-cols-1 g-0">	
+				
+				
+				<!-- end col -->
+				<div class="col">
+					<div class="mt-3 mt-lg-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">TAUX PROGRESSION
+							<i class="ri-percent-line text-danger fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-percent-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span class="counter-value" data-target="2659">0</span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="mt-3 mt-lg-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">DUREE MOYENNE INTERVIEW
+							<i class="ri-time-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-time-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span class="counter-value" data-target="1596.5">0</span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="mt-3 mt-lg-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">TAILLE MOYENNE MENAGE
+							<i class="ri-percent-line text-danger fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-percent-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span class="counter-value" data-target="2659"></span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">RRAVI
+							<i class=" ri-team-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class=" ri-team-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span class="counter-value" data-target="197"> </span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">RAPPORT DE MASCULINITE
+							<i class=" ri-team-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class=" ri-team-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span class="counter-value" data-target="197"> </span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="mt-3 mt-md-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">PARITE ATTEINTE 15-49 ANS
+							<i class="ri-team-fill text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-team-fill display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span class="counter-value" data-target="489.4">0</span></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+			</div>
+			<!-- end row -->
+		</div>
+		<!-- end card body -->
+	</div>
+	<!-- end card -->
+</div>
+<div class="col-xl-12">
+	<div class="card crm-widget">
+		<div class="card-body p-0">
+			<div class="row row-cols-xxl-6 row-cols-lg-3 row-cols-md-2 row-cols-1 g-0">
+				
+				<div class="col">
+					<div class="mt-3 mt-lg-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">NBRE MOYEN DECES PAR MENAGE
+							<i class="ri-team-line text-danger fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-group-fill display-6  text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<h2 class="mb-0 cfs-22"><span id="decesSpan" class="counter-value"><%= (stats.averageDeces !== undefined && stats.averageDeces !== null) ? Number(stats.averageDeces).toFixed(2) : '—' %></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+
+
+				<!--Début Ly -->
+				<div class="col">
+					<div class="mt-3 mt-lg-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">PROPORTION MENAGES AGRICOLES
+							<i class="ri-team-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class=" display-6 text-muted cfs-22">🌾</i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span id="agriSpan" class="counter-value"><%= stats.proportionAgricoles %> %</span>
+								</h2> %></span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">NMPE
+							<i class=" ri-team-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class=" ri-team-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span class="counter-value" id="emigreSpan" data-target="197"> <%= stats.averageEmigres %></span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="mt-3 mt-md-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">PROP ENFANTS 0-5 ANS
+							<i class=" ri-emotion-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class=" ri-emotion-fill display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span id="enfantSpan" class="counter-value" data-target="489.4"> <%= stats.proportionEnfantsMoins5 %></span></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="mt-3 mt-md-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">NBRE MENAGES +10 INDIVIDUS
+							<i class="ri-team-line text-danger fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-team-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22">
+									<span id="grandMenagesSpan" class="counter-value" data-target="32.89">  <%= stats.nbMenagesPlus10 %></span></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- end col -->
+				<div class="col">
+					<div class="mt-3 mt-lg-0 py-4 px-3">
+						<h5 class="text-muted text-uppercase fs-13">NBRE MENAGES 1 INDIVIDUS
+							<i class="ri-team-line text-success fs-18 float-end align-middle"></i>
+						</h5>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0">
+								<i class="ri-team-line display-6 text-muted cfs-22"></i>
+							</div>
+							<div class="flex-grow-1 ms-3">
+								<h2 class="mb-0 cfs-22"><span id="menagesSoloSpan"  class="counter-value" data-target="1596.5"><%= stats.nbMenagesSolo %></span>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- FIN Ly-->
+				
+        
+			</div>
+			<!-- end row -->
+		</div>
+		<!-- end card body -->
+	</div>
+	<!-- end card -->
+  
+</div>
+<!-- end col --></div><!-- end row -->
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const regionSelect = document.getElementById('region');
+  const departementSelect = document.getElementById('departement');
+  const communeSelect = document.getElementById('commune');
+  const zdSelect = document.getElementById('zd');
+
+  const popSpan = document.getElementById('popSpan');
+  const menageSpan = document.getElementById('menageSpan');
+  const decesSpan = document.getElementById('decesSpan');
+  const agriSpan = document.getElementById('agriSpan');
+  const emigreSpan = document.getElementById('emigreSpan');
+  const enfantSpan = document.getElementById('enfantSpan');
+  const grandMenagesSpan = document.getElementById('grandMenagesSpan');
+  const menagesSoloSpan = document.getElementById('menagesSoloSpan');
+  const popTotaleSpan = document.getElementById('popTotaleSpan');
+  const totalHommesSpan = document.getElementById('totalHommesSpan');
+  const totalFemmesSpan = document.getElementById('totalFemmesSpan');
+  const enmcdPop = document.getElementById('enmcdPop');
+  const menEnumeresSpan = document.getElementById('menEnumeresSpan');
+  const popRuraleSpan = document.getElementById('popRuraleSpan');
+
+  const globalLoader = document.getElementById('globalLoader'); // loader unique
+
+  function showLoader() {
+    if (globalLoader) globalLoader.style.display = 'flex';
+  }
+
+  function hideLoader() {
+    if (globalLoader) globalLoader.style.display = 'none';
+  }
+
+  function setSelectsDisabled(state) {
+    [regionSelect, departementSelect, communeSelect, zdSelect].forEach(sel => {
+      if (sel) sel.disabled = state;
+    });
+  }
+
+  async function loadOptions(url, select, valueField, textField) {
+    select.innerHTML = '<option value="">Chargement...</option>';
+    select.disabled = true;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
+      const data = await response.json();
+      select.innerHTML = '<option value="">-- Sélectionner --</option>';
+      data.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d[valueField];
+        opt.textContent = d[textField];
+        select.appendChild(opt);
+      });
+      select.disabled = data.length === 0;
+    } catch (err) {
+      console.error('Erreur chargement options:', err);
+      select.innerHTML = '<option value="">Erreur de chargement</option>';
+      select.disabled = true;
+    }
+  }
+
+  async function updateStats() {
+    if (!regionSelect || !departementSelect || !communeSelect || !zdSelect) return;
+
+    showLoader();
+    setSelectsDisabled(true);
+
+    const params = new URLSearchParams({
+      region: regionSelect.value,
+      departement: departementSelect.value,
+      commune: communeSelect.value,
+      zd: zdSelect.value
+    });
+
+    try {
+      const response = await fetch(`/stats?${params}`);
+      if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
+      const data = await response.json();
+
+     if (popSpan) popSpan.textContent = data.totalPopulation ?? '—';
+if (menageSpan) menageSpan.textContent = data.totalMenages ?? '—';
+if (decesSpan) decesSpan.textContent = (data.averageDeces !== undefined && data.averageDeces !== null)
+  ? Number(data.averageDeces).toFixed(2)
+  : '—';
+if (agriSpan) agriSpan.textContent = data.proportionAgricoles !== undefined ? `${data.proportionAgricoles} %` : '—';
+if (emigreSpan) emigreSpan.textContent = data.averageEmigres ?? '—';
+if (enfantSpan) enfantSpan.textContent = data.proportionEnfantsMoins5 ?? '—';
+if (grandMenagesSpan) grandMenagesSpan.textContent = data.nbMenagesPlus10 ?? '—';
+if (menagesSoloSpan) menagesSoloSpan.textContent = data.nbMenagesSolo ?? '—';
+if (popTotaleSpan) popTotaleSpan.textContent = data.populationSexe?.total ?? '—';   // populationSexe est un objet
+if (totalHommesSpan) totalHommesSpan.textContent = data.populationSexe?.hommes ?? '—';
+if (totalFemmesSpan) totalFemmesSpan.textContent = data.populationSexe?.femmes ?? '—';
+if (enmcdPop) enmcdPop.textContent = data.enmcd ?? '—';
+if (menEnumeresSpan) menEnumeresSpan.textContent = data.menages_enumeres ?? '—';
+if (popRuraleSpan) popRuraleSpan.textContent = data.populationRurale?.rural ?? '—';  // populationRurale est un objet
+
+
+    } catch (err) {
+      console.error('Erreur stats:', err);
+      Object.values({
+        popSpan, menageSpan, decesSpan, agriSpan, emigreSpan, enfantSpan,
+        grandMenagesSpan, menagesSoloSpan, popTotaleSpan, totalHommesSpan,
+        totalFemmesSpan, enmcdPop, menEnumeresSpan, popRuraleSpan
+      }).forEach(span => { if (span) span.textContent = '—'; });
+    } finally {
+      hideLoader();
+      setSelectsDisabled(false);
+    }
+  }
+
+  // Événements pour chaque select
+  regionSelect.addEventListener('change', async () => {
+    await loadOptions(`/api/location/departements?region=${regionSelect.value}`, departementSelect, 'code_departement', 'departement');
+    communeSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+    communeSelect.disabled = true;
+    zdSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+    zdSelect.disabled = true;
+    updateStats();
+  });
+
+  departementSelect.addEventListener('change', async () => {
+    await loadOptions(`/api/location/communes?departement=${departementSelect.value}`, communeSelect, 'code_commune', 'commune');
+    zdSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+    zdSelect.disabled = true;
+    updateStats();
+  });
+
+  communeSelect.addEventListener('change', async () => {
+    await loadOptions(`/api/location/zds?commune=${communeSelect.value}`, zdSelect, 'mo_zd', 'mo_zd');
+    updateStats();
+  });
+
+  zdSelect.addEventListener('change', updateStats);
+
+  // Initialisation
+  loadOptions('/api/location/regions', regionSelect, 'code_region', 'region');
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
