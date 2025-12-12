@@ -905,9 +905,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const communeCode = getSelectValue('commune');
     
     console.log('🔍 Codes initiaux - Région:', regionCode, 'Département:', deptCode, 'Commune:', communeCode);
+    console.log('👤 Rôle utilisateur:', userRole);
     
     try {
-      // Pour ROLE_GLOBAL : Précharger les régions
+      // ===== ROLE_GLOBAL : Précharger les régions =====
       if (userRole === 'ROLE_GLOBAL' && isActiveSelect(selects.region)) {
         if (selects.region.options.length <= 1) { // Juste l'option vide
           console.log('📥 Chargement initial des régions pour ROLE_GLOBAL');
@@ -915,11 +916,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       
-      // Si on a une région, charger les départements
-      if (regionCode && regionCode.trim() !== '' && isActiveSelect(selects.departement)) {
+      // ===== ROLE_REGIONAL : Charger les départements de sa région =====
+      if (userRole === 'ROLE_REGIONAL' && regionCode && isActiveSelect(selects.departement)) {
+        console.log('📥 ROLE_REGIONAL - Chargement départements pour région:', regionCode);
+        await loadOptions(`/api/location/departements?region=${regionCode}`, 
+                         selects.departement, 'code_departement', 'departement');
+      }
+      
+      // ===== ROLE_DEPARTEMENTAL : Charger départements puis communes =====
+      if (userRole === 'ROLE_DEPARTEMENTAL' && regionCode) {
+        console.log('📥 ROLE_DEPARTEMENTAL - Chargement départements pour région:', regionCode);
+        
+        // Charger les départements (même si verrouillé, pour afficher le nom)
+        if (isActiveSelect(selects.departement)) {
+          await loadOptions(`/api/location/departements?region=${regionCode}`, 
+                           selects.departement, 'code_departement', 'departement');
+          
+          // Présélectionner le département
+          if (deptCode && deptCode.trim() !== '') {
+            selects.departement.value = deptCode;
+            console.log('✅ ROLE_DEPARTEMENTAL - Département présélectionné:', deptCode);
+          }
+        }
+        
+        // Charger les communes pour ce département
+        if (deptCode && isActiveSelect(selects.commune)) {
+          console.log('📥 ROLE_DEPARTEMENTAL - Chargement communes pour département:', deptCode);
+          await loadOptions(`/api/location/communes?departement=${deptCode}`, 
+                           selects.commune, 'code_commune', 'commune');
+        }
+      }
+      
+      // ===== ROLE_COMMUNAL : Charger départements, communes puis ZDs =====
+      if (userRole === 'ROLE_COMMUNAL' && regionCode) {
+        console.log('📥 ROLE_COMMUNAL - Initialisation complète');
+        
+        // Charger les départements
+        if (isActiveSelect(selects.departement)) {
+          await loadOptions(`/api/location/departements?region=${regionCode}`, 
+                           selects.departement, 'code_departement', 'departement');
+          
+          if (deptCode && deptCode.trim() !== '') {
+            selects.departement.value = deptCode;
+            console.log('✅ ROLE_COMMUNAL - Département présélectionné:', deptCode);
+          }
+        }
+        
+        // Charger les communes
+        if (deptCode && isActiveSelect(selects.commune)) {
+          await loadOptions(`/api/location/communes?departement=${deptCode}`, 
+                           selects.commune, 'code_commune', 'commune');
+          
+          if (communeCode && communeCode.trim() !== '') {
+            selects.commune.value = communeCode;
+            console.log('✅ ROLE_COMMUNAL - Commune présélectionnée:', communeCode);
+          }
+        }
+        
+        // Charger les ZDs pour cette commune
+        if (communeCode && isActiveSelect(selects.zd)) {
+          console.log('📥 ROLE_COMMUNAL - Chargement ZDs pour commune:', communeCode);
+          await loadOptions(`/api/location/zds?commune=${communeCode}`, 
+                           selects.zd, 'mo_zd', 'mo_zd');
+        }
+      }
+      
+      // ===== LOGIQUE GÉNÉRIQUE (pour tous les autres cas) =====
+      // Si on a une région et pas encore géré ci-dessus
+      if (regionCode && regionCode.trim() !== '' && 
+          !['ROLE_DEPARTEMENTAL', 'ROLE_COMMUNAL'].includes(userRole) &&
+          isActiveSelect(selects.departement)) {
         console.log('📥 Chargement départements pour région:', regionCode);
-        const depts = await loadOptions(`/api/location/departements?region=${regionCode}`, 
-                                        selects.departement, 'code_departement', 'departement');
+        await loadOptions(`/api/location/departements?region=${regionCode}`, 
+                         selects.departement, 'code_departement', 'departement');
         
         // Si on a un département dans les données EJS, le présélectionner
         if (deptCode && deptCode.trim() !== '' && selects.departement) {
@@ -929,8 +998,8 @@ document.addEventListener('DOMContentLoaded', () => {
           // Si département sélectionné, charger les communes
           if (isActiveSelect(selects.commune) && selects.departement.value) {
             console.log('📥 Chargement communes pour département:', selects.departement.value);
-            const communes = await loadOptions(`/api/location/communes?departement=${selects.departement.value}`, 
-                                               selects.commune, 'code_commune', 'commune');
+            await loadOptions(`/api/location/communes?departement=${selects.departement.value}`, 
+                             selects.commune, 'code_commune', 'commune');
             
             // Si on a une commune dans les données EJS, la présélectionner
             if (communeCode && communeCode.trim() !== '' && selects.commune) {
@@ -948,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       
-      // Initialiser les stats
+      // ===== Initialiser les stats (pour TOUS les rôles) =====
       console.log('📊 Initialisation des stats...');
       await updateStats();
       

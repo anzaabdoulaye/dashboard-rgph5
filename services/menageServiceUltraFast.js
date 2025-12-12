@@ -21,16 +21,39 @@ function buildReplacements(filters = {}, user = null) {
     zd: filters.zd ?? null
   };
   
-  // Appliquer les restrictions de l'utilisateur
-  if (user) {
-    if (user.code_region) {
-      replacements.region = user.code_region;
-    }
-    if (user.code_departement) {
-      replacements.departement = user.code_departement;
-    }
-    if (user.code_commune) {
-      replacements.commune = user.code_commune;
+  // Appliquer les restrictions de l'utilisateur selon son rôle
+  if (user && user.code) {
+    const userRole = Array.isArray(user.roles) ? user.roles[0] : user.role;
+    
+    switch(userRole) {
+      case 'ROLE_REGIONAL':
+        // Pour le rôle régional, extraire le code région (1er caractère)
+        if (user.code.length >= 1) {
+          replacements.region = filters.region || user.code.substring(0, 1);
+        }
+        break;
+        
+      case 'ROLE_DEPARTEMENTAL':
+        // Pour le rôle départemental, extraire région et département (3 premiers caractères)
+        if (user.code.length >= 3) {
+          replacements.region = filters.region || user.code.substring(0, 1);
+          replacements.departement = filters.departement || user.code.substring(0, 3);
+        }
+        break;
+        
+      case 'ROLE_COMMUNAL':
+        // Pour le rôle communal, utiliser le code complet (5 caractères)
+        if (user.code.length === 5) {
+          replacements.region = filters.region || user.code.substring(0, 1);
+          replacements.departement = filters.departement || user.code.substring(0, 3);
+          replacements.commune = filters.commune || user.code;
+        }
+        break;
+        
+      case 'ROLE_GLOBAL':
+      default:
+        // Pour le rôle global, utiliser uniquement les filtres fournis (aucune restriction)
+        break;
     }
   }
   
@@ -321,15 +344,20 @@ async function getPyramideAges(filters = {}, user = null) {
 
 /*  Select dynamiques avec restrictions utilisateur  */
 async function getRegions(user = null) {
-  const cacheKey = user ? `regions:u${user.id}` : 'regions:all';
+  const cacheKey = user ? `regions:u${user.id}_${user.role}` : 'regions:all';
   
   return await cacheHelper.getOrSet(cacheKey, async () => {
     let sql = `SELECT DISTINCT code_region, region FROM tmenage`;
     const replacements = {};
     
-    if (user && user.code_region) {
-      sql += ` WHERE code_region = :code_region`;
-      replacements.code_region = user.code_region;
+    // Si l'utilisateur a un rôle restreint, filtrer par sa région
+    if (user && user.code && user.code !== 'GLOBAL') {
+      const userRole = Array.isArray(user.roles) ? user.roles[0] : user.role;
+      
+      if (['ROLE_REGIONAL', 'ROLE_DEPARTEMENTAL', 'ROLE_COMMUNAL'].includes(userRole)) {
+        sql += ` WHERE code_region = :code_region`;
+        replacements.code_region = user.code.substring(0, 1);
+      }
     }
     
     sql += ` ORDER BY region ASC`;
@@ -339,9 +367,14 @@ async function getRegions(user = null) {
 }
 
 async function getDepartements(region, user = null) {
-  if (!region && !user?.code_departement) return [];
+  // Vérifier si on a une région ou si l'utilisateur a un département restreint
+  const userRole = user ? (Array.isArray(user.roles) ? user.roles[0] : user.role) : null;
+  const hasDepartementRestriction = user && user.code && 
+    ['ROLE_DEPARTEMENTAL', 'ROLE_COMMUNAL'].includes(userRole);
   
-  const cacheKey = `departements:r${region || 'null'}:u${user?.id || 'null'}`;
+  if (!region && !hasDepartementRestriction) return [];
+  
+  const cacheKey = `departements:r${region || 'null'}:u${user?.id || 'null'}_${userRole || 'null'}`;
   
   return await cacheHelper.getOrSet(cacheKey, async () => {
     let sql = `SELECT DISTINCT code_departement, departement FROM tmenage WHERE 1=1`;
@@ -350,14 +383,16 @@ async function getDepartements(region, user = null) {
     if (region) {
       sql += ` AND code_region = :region`;
       replacements.region = region;
-    } else if (user?.code_region) {
+    } else if (user && user.code && user.code !== 'GLOBAL' && user.code.length >= 1) {
+      // Appliquer la restriction par région de l'utilisateur
       sql += ` AND code_region = :code_region`;
-      replacements.code_region = user.code_region;
+      replacements.code_region = user.code.substring(0, 1);
     }
     
-    if (user?.code_departement) {
+    // Si l'utilisateur a un rôle départemental ou communal, filtrer par son département
+    if (hasDepartementRestriction && user.code.length >= 3) {
       sql += ` AND code_departement = :code_departement`;
-      replacements.code_departement = user.code_departement;
+      replacements.code_departement = user.code.substring(0, 3);
     }
     
     sql += ` ORDER BY departement ASC`;
@@ -367,9 +402,14 @@ async function getDepartements(region, user = null) {
 }
 
 async function getCommunes(departement, user = null) {
-  if (!departement && !user?.code_commune) return [];
+  // Vérifier si on a un département ou si l'utilisateur a une commune restreinte
+  const userRole = user ? (Array.isArray(user.roles) ? user.roles[0] : user.role) : null;
+  const hasCommuneRestriction = user && user.code && userRole === 'ROLE_COMMUNAL';
   
-  const cacheKey = `communes:d${departement || 'null'}:u${user?.id || 'null'}`;
+  if (!departement && !hasCommuneRestriction && 
+      !(user && user.code && ['ROLE_DEPARTEMENTAL'].includes(userRole))) return [];
+  
+  const cacheKey = `communes:d${departement || 'null'}:u${user?.id || 'null'}_${userRole || 'null'}`;
   
   return await cacheHelper.getOrSet(cacheKey, async () => {
     let sql = `SELECT DISTINCT code_commune, commune FROM tmenage WHERE 1=1`;
@@ -378,14 +418,16 @@ async function getCommunes(departement, user = null) {
     if (departement) {
       sql += ` AND code_departement = :departement`;
       replacements.departement = departement;
-    } else if (user?.code_departement) {
+    } else if (user && user.code && user.code.length >= 3) {
+      // Appliquer la restriction par département de l'utilisateur
       sql += ` AND code_departement = :code_departement`;
-      replacements.code_departement = user.code_departement;
+      replacements.code_departement = user.code.substring(0, 3);
     }
     
-    if (user?.code_commune) {
+    // Si l'utilisateur a un rôle communal, filtrer par sa commune
+    if (hasCommuneRestriction && user.code.length === 5) {
       sql += ` AND code_commune = :code_commune`;
-      replacements.code_commune = user.code_commune;
+      replacements.code_commune = user.code;
     }
     
     sql += ` ORDER BY commune ASC`;
@@ -395,9 +437,13 @@ async function getCommunes(departement, user = null) {
 }
 
 async function getZds(commune, user = null) {
-  if (!commune && !user?.code_commune) return [];
+  // Vérifier si on a une commune ou si l'utilisateur a une commune restreinte
+  const userRole = user ? (Array.isArray(user.roles) ? user.roles[0] : user.role) : null;
+  const hasCommuneRestriction = user && user.code && userRole === 'ROLE_COMMUNAL';
   
-  const cacheKey = `zds:c${commune || 'null'}:u${user?.id || 'null'}`;
+  if (!commune && !hasCommuneRestriction) return [];
+  
+  const cacheKey = `zds:c${commune || 'null'}:u${user?.id || 'null'}_${userRole || 'null'}`;
   
   return await cacheHelper.getOrSet(cacheKey, async () => {
     let sql = `SELECT DISTINCT mo_zd FROM tmenage WHERE 1=1`;
@@ -406,9 +452,10 @@ async function getZds(commune, user = null) {
     if (commune) {
       sql += ` AND code_commune = :commune`;
       replacements.commune = commune;
-    } else if (user?.code_commune) {
+    } else if (user && user.code && user.code.length === 5) {
+      // Appliquer la restriction par commune de l'utilisateur
       sql += ` AND code_commune = :code_commune`;
-      replacements.code_commune = user.code_commune;
+      replacements.code_commune = user.code;
     }
     
     sql += ` ORDER BY mo_zd ASC`;

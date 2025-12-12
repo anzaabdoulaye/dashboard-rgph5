@@ -866,14 +866,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     // Initialisation selon le rôle
+    const currentRegion = getSelectValue('region');
+    const currentDept = getSelectValue('departement');
+    const currentCommune = getSelectValue('commune');
+    
+    console.log('🔍 Initial codes - Region:', currentRegion, 'Dept:', currentDept, 'Commune:', currentCommune);
+    
+    // ===== ROLE_GLOBAL : Charger toutes les régions =====
     if (userRole === 'ROLE_GLOBAL' && regionSelect && regionSelect.tagName === 'SELECT') {
-        // Charger toutes les régions
+        console.log('📥 ROLE_GLOBAL - Loading all regions');
         await loadLocationOptions('/api/location/regions', regionSelect, 'code_region', 'region');
     }
     
-    // Précharger les données selon la région actuelle
-    const currentRegion = getSelectValue('region');
-    if (currentRegion && deptSelect && deptSelect.tagName === 'SELECT') {
+    // ===== ROLE_REGIONAL : Charger départements de sa région =====
+    if (userRole === 'ROLE_REGIONAL' && currentRegion && deptSelect && deptSelect.tagName === 'SELECT') {
+        console.log('📥 ROLE_REGIONAL - Loading departments for region:', currentRegion);
         await loadLocationOptions(
             `/api/location/departements?region=${currentRegion}`,
             deptSelect,
@@ -881,6 +888,130 @@ document.addEventListener("DOMContentLoaded", async () => {
             'departement',
             `dept_${currentRegion}`
         );
+    }
+    
+    // ===== ROLE_DEPARTEMENTAL : Charger départements puis communes =====
+    if (userRole === 'ROLE_DEPARTEMENTAL' && currentRegion) {
+        console.log('📥 ROLE_DEPARTEMENTAL - Initializing departments and communes');
+        
+        // Charger les départements
+        if (deptSelect && deptSelect.tagName === 'SELECT') {
+            await loadLocationOptions(
+                `/api/location/departements?region=${currentRegion}`,
+                deptSelect,
+                'code_departement',
+                'departement',
+                `dept_${currentRegion}`
+            );
+            
+            if (currentDept && currentDept.trim() !== '') {
+                deptSelect.value = currentDept;
+                console.log('✅ ROLE_DEPARTEMENTAL - Department preselected:', currentDept);
+            }
+        }
+        
+        // Charger les communes pour ce département
+        if (currentDept && comSelect && comSelect.tagName === 'SELECT') {
+            console.log('📥 ROLE_DEPARTEMENTAL - Loading communes for department:', currentDept);
+            await loadLocationOptions(
+                `/api/location/communes?departement=${currentDept}`,
+                comSelect,
+                'code_commune',
+                'commune',
+                `com_${currentDept}`
+            );
+        }
+    }
+    
+    // ===== ROLE_COMMUNAL : Charger départements, communes et ZDs =====
+    if (userRole === 'ROLE_COMMUNAL' && currentRegion) {
+        console.log('📥 ROLE_COMMUNAL - Full initialization');
+        
+        // Charger les départements
+        if (deptSelect && deptSelect.tagName === 'SELECT') {
+            await loadLocationOptions(
+                `/api/location/departements?region=${currentRegion}`,
+                deptSelect,
+                'code_departement',
+                'departement',
+                `dept_${currentRegion}`
+            );
+            
+            if (currentDept && currentDept.trim() !== '') {
+                deptSelect.value = currentDept;
+                console.log('✅ ROLE_COMMUNAL - Department preselected:', currentDept);
+            }
+        }
+        
+        // Charger les communes
+        if (currentDept && comSelect && comSelect.tagName === 'SELECT') {
+            await loadLocationOptions(
+                `/api/location/communes?departement=${currentDept}`,
+                comSelect,
+                'code_commune',
+                'commune',
+                `com_${currentDept}`
+            );
+            
+            if (currentCommune && currentCommune.trim() !== '') {
+                comSelect.value = currentCommune;
+                console.log('✅ ROLE_COMMUNAL - Commune preselected:', currentCommune);
+            }
+        }
+        
+        // Charger les ZDs pour cette commune
+        if (currentCommune && zdSelect && zdSelect.tagName === 'SELECT') {
+            console.log('📥 ROLE_COMMUNAL - Loading ZDs for commune:', currentCommune);
+            await loadLocationOptions(
+                `/api/location/zds?commune=${currentCommune}`,
+                zdSelect,
+                'mo_zd',
+                'mo_zd',
+                `zd_${currentCommune}`
+            );
+        }
+    }
+    
+    // ===== Précharger les données selon la région actuelle (autres rôles) =====
+    if (!['ROLE_DEPARTEMENTAL', 'ROLE_COMMUNAL'].includes(userRole) && 
+        currentRegion && deptSelect && deptSelect.tagName === 'SELECT') {
+        await loadLocationOptions(
+            `/api/location/departements?region=${currentRegion}`,
+            deptSelect,
+            'code_departement',
+            'departement',
+            `dept_${currentRegion}`
+        );
+        
+        // Si un département est déjà sélectionné, charger les communes
+        if (currentDept && comSelect && comSelect.tagName === 'SELECT') {
+            await loadLocationOptions(
+                `/api/location/communes?departement=${currentDept}`,
+                comSelect,
+                'code_commune',
+                'commune',
+                `com_${currentDept}`
+            );
+            
+            if (currentDept && comSelect) {
+                comSelect.value = currentDept;
+            }
+            
+            // Si une commune est déjà sélectionnée, charger les ZDs
+            if (currentCommune && zdSelect && zdSelect.tagName === 'SELECT') {
+                await loadLocationOptions(
+                    `/api/location/zds?commune=${currentCommune}`,
+                    zdSelect,
+                    'mo_zd',
+                    'mo_zd',
+                    `zd_${currentCommune}`
+                );
+                
+                if (currentCommune && zdSelect) {
+                    zdSelect.value = currentCommune;
+                }
+            }
+        }
     }
     
     // Gestion des événements
