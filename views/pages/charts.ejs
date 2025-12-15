@@ -67,58 +67,65 @@
 			<div class="row g-3 w-100">
 				<div class="row">
 					<!-- Région -->
-					<div class="col-3">
-						<label>Région</label>
-						<% if (user.canChangeRegion) { %>
-							<select id="region" class="form-select">
-								<option value="">-- Sélectionner --</option>
-								<% selects.regions.forEach(region => { %>
-									<option value="<%= region.code_region %>"><%= region.region %></option>
-								<% }); %>
-							</select>
-						<% } else { %>
-							<% const defaultRegion = user.defaultRegion || selects.regions[0]?.code_region || ''; %>
-							<% const defaultRegionName = selects.regions[0]?.region || 'Région non disponible'; %>
-							<input type="hidden" id="region" value="<%= defaultRegion %>">
-							<div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-								<%= defaultRegionName %>
-							</div>
-						<% } %>
-					</div>
-					
-					<!-- Département -->
-					<div class="col-3">
-						<label>Département</label>
-						<% if (user.canChangeDepartement) { %>
-							<select id="departement" class="form-select">
-								<option value="">-- Sélectionner --</option>
-							</select>
-						<% } else { %>
-							<% const defaultDept = user.defaultDepartement || selects.departements[0]?.code_departement || ''; %>
-							<% const defaultDeptName = selects.departements[0]?.departement || 'Département non disponible'; %>
-							<input type="hidden" id="departement" value="<%= defaultDept %>">
-							<div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-								<%= defaultDeptName %>
-							</div>
-						<% } %>
-					</div>
-					
-					<!-- Commune -->
-					<div class="col-3">
-						<label>Commune</label>
-						<% if (user.canChangeCommune) { %>
-							<select id="commune" class="form-select">
-								<option value="">-- Sélectionner --</option>
-							</select>
-						<% } else { %>
-							<% const defaultCommune = user.defaultCommune || selects.communes[0]?.code_commune || ''; %>
-							<% const defaultCommuneName = selects.communes[0]?.commune || 'Commune non disponible'; %>
-							<input type="hidden" id="commune" value="<%= defaultCommune %>">
-							<div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-								<%= defaultCommuneName %>
-							</div>
-						<% } %>
-					</div>
+  <div class="col-3">
+    <label>Région</label>
+    <% if (user.canChangeRegion) { %>
+      <!-- ROLE_GLOBAL : Select actif avec options préchargées -->
+      <select id="region" class="form-select">
+        <option value="">-- Sélectionner --</option>
+        <% selects.regions.forEach(region => { %>
+          <option value="<%= region.code_region %>"><%= region.region %></option>
+        <% }); %>
+      </select>
+    <% } else { %>
+      <!-- Rôles REGIONAL, DEPARTEMENTAL, COMMUNAL : Région fixée -->
+      <% const defaultRegion = user.defaultRegion || selects.regions[0]?.code_region || ''; %>
+      <% const defaultRegionName = selects.regions[0]?.region || 'Région non disponible'; %>
+      
+      <input type="hidden" id="region" value="<%= defaultRegion %>">
+      <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+        <%= defaultRegionName %>
+      </div>
+    <% } %>
+  </div>
+  
+  <!-- Département -->
+<div class="col-3">
+  <label>Département</label>
+  <% if (user.canChangeDepartement) { %>
+    <select id="departement" class="form-select">
+      <option value="">-- Sélectionner --</option>
+    </select>
+  <% } else { %>
+    <% const defaultDept = user.defaultDepartement || selects.departements[0]?.code_departement || ''; %>
+    <% const defaultDeptName = selects.departements[0]?.departement || 'Département non disponible'; %>
+    
+    <input type="hidden" id="departement" value="<%= defaultDept %>">
+    <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+      <%= defaultDeptName %>
+    </div>
+  <% } %>
+</div>
+  
+  <!-- Commune -->
+  <div class="col-3">
+    <label>Commune</label>
+    <% if (user.canChangeCommune) { %>
+      <!-- ROLE_GLOBAL, REGIONAL, DEPARTEMENTAL : Select actif -->
+      <select id="commune" class="form-select">
+        <option value="">-- Sélectionner --</option>
+      </select>
+    <% } else { %>
+      <!-- ROLE_COMMUNAL : Commune fixée -->
+      <% const defaultCommune = user.defaultCommune || selects.communes[0]?.code_commune || ''; %>
+      <% const defaultCommuneName = selects.communes[0]?.commune || 'Commune non disponible'; %>
+      
+      <input type="hidden" id="commune" value="<%= defaultCommune %>">
+      <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+        <%= defaultCommuneName %>
+      </div>
+    <% } %>
+  </div>
 					
 					<!-- ZD -->
 					<div class="col-3">
@@ -307,7 +314,7 @@ async function updateCharts(filters = {}) {
         updateGenderChart(stats.populationStats.hommes || 0, stats.populationStats.femmes || 0);
         
         // 2. PYRAMIDE DES ÂGES
-        updatePyramidChart(pyramideAges || []);
+        updatePyramidChart(stats.pyramideAges || []);
         
         // 3. PROGRESSION DE LA COLLECTE
         updateProgressChart(stats.mainStats.collectee || 0, stats.mainStats.cartographie || 0);

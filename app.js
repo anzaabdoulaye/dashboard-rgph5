@@ -45,7 +45,7 @@ app.use(helmet({
 // 3. Rate limiting pour éviter les abus
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limite à 100 requêtes par IP
+  max: 200, // Limite à 100 requêtes par IP
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -57,7 +57,7 @@ app.use(limiter);
 // Rate limiting plus strict pour les API
 const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 30, // 30 requêtes par minute max
+  max: 100, // 30 requêtes par minute max
   message: 'Trop de requêtes API, veuillez ralentir.',
 });
 
