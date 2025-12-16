@@ -526,9 +526,6 @@
 <script>
 
 document.addEventListener('DOMContentLoaded', () => {
-  SmartCache.clear();
-  if (typeof optionsCache !== 'undefined') Object.keys(optionsCache).forEach(k => delete optionsCache[k]);
-  if (typeof statsCache !== 'undefined') Object.keys(statsCache).forEach(k => delete statsCache[k]);
   const selects = {
     region: document.getElementById('region'),
     departement: document.getElementById('departement'),
@@ -536,8 +533,8 @@ document.addEventListener('DOMContentLoaded', () => {
     zd: document.getElementById('zd'),
     refreshBtn: document.getElementById('refreshAll')
   };
-
-  console.log('📌 Éléments DOM:', selects);
+  
+  console.log('📌 Dashboard Initialisé. Éléments:', selects);
 
   // ✅ Vérifie si c'est un select actif
   const isActiveSelect = (element) => {
@@ -812,7 +809,6 @@ console.log("Structure populationStats (Filtre):", data.populationStats);
     showLoader();
     
     // 1. Vider tous les caches client
-    SmartCache.clear();
     Object.keys(optionsCache).forEach(k => delete optionsCache[k]);
     Object.keys(statsCache).forEach(k => delete statsCache[k]);
     

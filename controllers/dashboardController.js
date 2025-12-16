@@ -175,39 +175,36 @@ exports.getStats = async (req, res) => {
   try {
     const user = req.session.user;
     
-    // 1. Initialiser les filtres bruts (en utilisant la valeur du query, même si c'est "")
-     let filters = {
+    // 1. Gestion du cache-buster client (_cb, _t)
+    // Si le client demande un rafraîchissement forcé, on peut ignorer le cache ici (optionnel)
+    
+    // 2. Initialiser et nettoyer les filtres
+    let filters = {
       region: req.query.region,
       departement: req.query.departement,
       commune: req.query.commune,
       zd: req.query.zd
     };
-
-    // 2. Nettoyer les filtres. 
-    //    Si la valeur est "" (venant de -- Sélectionner --), elle devient null.
     let cleanedFilters = cleanFilters(filters);
-
-    // 3. Appliquer les restrictions du rôle (si nécessaire).
-    //    Ceci va remplacer les valeurs nulles par la restriction de l'utilisateur.
-    //    Exemple: Si user est REGIONAL 1, et region est null, region devient '1'.
-    //    Utilisez cleanedFilters pour que initializeFiltersForRole voie les 'null' corrects.
     const finalFilters = initializeFiltersForRole(user, cleanedFilters);
 
-    // 4. Validation finale des filtres
     if (!hasAccessToFilters(user, finalFilters)) {
-      return res.status(403).json({ error: 'Accès non autorisé à ce territoire' });
+      return res.status(403).json({ error: 'Accès non autorisé' });
     }
 
-    // 5. Utiliser les filtres finaux pour le cache (qui seront nulls pour Global/National)
     const cacheKey = getCacheKey(finalFilters, user);
-
     let stats;
 
-    if (statsCache[cacheKey] && statsCache[cacheKey].pyramideAges) {
-      console.log('📦 Cache hit (Complet avec Pyramide)');
-      stats = statsCache[cacheKey];
+    // 3. VÉRIFICATION ROBUSTE DU CACHE
+    // On vérifie si le cache existe ET s'il est complet (contient pyramideAges)
+    // C'est crucial car showDashboard peut avoir rempli le cache partiellement (sans pyramide)
+    const cachedData = statsCache[cacheKey];
+    
+    if (cachedData && cachedData.pyramideAges && cachedData.populationStats) {
+      console.log(`📦 Cache HIT (API Stats) - Clé: ${cacheKey}`);
+      stats = cachedData;
     } else {
-      console.log('🔄 Cache miss ou incomplet - Recalcul des données...');
+      console.log(`🔄 Cache MISS ou INCOMPLET (Recalcul total) - Clé: ${cacheKey}`);
       
       const [mainStats, populationStats, proportionAgricoles, averageEmigres, pyramideAges] = await Promise.all([
         menageService.getMainStats(finalFilters, user),
@@ -222,18 +219,22 @@ exports.getStats = async (req, res) => {
         populationStats,
         proportionAgricoles,
         averageEmigres,
-        pyramideAges // Elle sera bien incluse ici
+        pyramideAges
       };
 
       // Mise à jour du cache
       statsCache[cacheKey] = stats;
-      setTimeout(() => delete statsCache[cacheKey], 5 * 60 * 1000); 
+      // Expiration 5 min
+      setTimeout(() => { 
+          if(statsCache[cacheKey]) delete statsCache[cacheKey]; 
+      }, 5 * 60 * 1000); 
     }
     
     res.json(stats);
+
   } catch (err) {
-    console.error('Erreur getStats:', err);
-    res.status(500).json({ error: 'Erreur lors du calcul des statistiques.' });
+    console.error('❌ Erreur getStats:', err);
+    res.status(500).json({ error: 'Erreur serveur lors du calcul des statistiques.' });
   }
 };
 // Page Charts

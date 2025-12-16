@@ -144,17 +144,17 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        SmartCache.clear();
-  if (typeof optionsCache !== 'undefined') Object.keys(optionsCache).forEach(k => delete optionsCache[k]);
-  if (typeof statsCache !== 'undefined') Object.keys(statsCache).forEach(k => delete statsCache[k]);
-        // --- 1. CONFIGURATION DOM ---
+  // SÉCURITÉ : SmartCache
+        if (typeof SmartCache !== 'undefined') SmartCache.clear();
+
         const selects = {
             region: document.getElementById('region'),
             departement: document.getElementById('departement'),
             commune: document.getElementById('commune'),
             zd: document.getElementById('zd')
         };
-
+        
+        let charts = { pyramide: null, gender: null, progression: null };
         const isActiveSelect = (element) => element && element.tagName === 'SELECT';
 
         const getSelectValue = (elementId) => {
@@ -166,11 +166,6 @@
         const optionsCache = {};
         
         // --- 2. INSTANCES CHART.JS ---
-        let charts = {
-            pyramide: null,
-            gender: null,
-            progression: null
-        };
 
         // --- 3. UTILITAIRES ---
         const showLoader = () => {
@@ -262,27 +257,25 @@
                     commune: getSelectValue('commune'),
                     zd: getSelectValue('zd')
                 };
+                console.log('📊 Charts - Paramètres:', paramsObj);
 
-                console.log('📊 Requête API avec filtres:', paramsObj);
-                const data = await fetchStats(paramsObj);
+                // Appel API
+                const url = `/stats?` + new URLSearchParams(Object.fromEntries(Object.entries(paramsObj).filter(([_, v]) => v))).toString();
+                const response = await fetch(url);
+                const data = await response.json();
 
                 if (data) {
-                    console.log("✅ Données reçues:", Object.keys(data));
+                    // Vérification des clés pour Pyramide
+                    // Supporte les deux formats possibles (pyramideAges ou pyramideData)
+                    const pyraData = data.pyramideAges || data.pyramideData || [];
+                    console.log("Données Pyramide reçues:", pyraData.length, "entrées");
                     
-                    // Sécurisation : Vérification des clés possibles
-                    // Le contrôleur renvoie parfois 'pyramideAges' ou 'pyramideData' selon la version
-                    const pyramideData = data.pyramideAges || data.pyramideData || [];
-                    const popData = data.populationStats || {};
-                    const mainData = data.mainStats || {};
-
-                    updatePyramideChart(pyramideData);
-                    updateGenderChart(popData);
-                    updateProgressionChart(mainData);
-                } else {
-                    console.warn("⚠️ Aucune donnée reçue de l'API");
+                    updatePyramideChart(pyraData);
+                    updateGenderChart(data.populationStats || {});
+                    updateProgressionChart(data.mainStats || {});
                 }
             } catch (err) {
-                console.error('Erreur critique updateCharts:', err);
+                console.error('Erreur updateCharts:', err);
             } finally {
                 hideLoader();
             }
@@ -518,6 +511,11 @@
             }
         }
 
-        setTimeout(initializePage, 100);
+setTimeout(() => {
+            // Charger les options initiales si nécessaire (ROLE_GLOBAL)
+            // Puis updateCharts()
+            initializePage();
+            updateCharts(); 
+        }, 100);
     });
 </script>
