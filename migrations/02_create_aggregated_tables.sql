@@ -26,6 +26,7 @@ CREATE TABLE stats_par_region (
     menages_denombres INT DEFAULT 0,
     population_carto INT DEFAULT 0,
     population_collectee INT DEFAULT 0,
+    average_deces INT DEFAULT 0,
     
     -- Stats population
     hommes INT DEFAULT 0,
@@ -68,6 +69,7 @@ CREATE TABLE stats_par_departement (
     menages_denombres INT DEFAULT 0,
     population_carto INT DEFAULT 0,
     population_collectee INT DEFAULT 0,
+    average_deces INT DEFAULT 0,
     
     -- Stats population
     hommes INT DEFAULT 0,
@@ -112,6 +114,7 @@ CREATE TABLE stats_par_commune (
     menages_denombres INT DEFAULT 0,
     population_carto INT DEFAULT 0,
     population_collectee INT DEFAULT 0,
+    average_deces INT DEFAULT 0,
     
     -- Stats population
     hommes INT DEFAULT 0,
@@ -156,6 +159,7 @@ CREATE TABLE stats_par_zd (
     menages_denombres INT DEFAULT 0,
     population_carto INT DEFAULT 0,
     population_collectee INT DEFAULT 0,
+    average_deces INT DEFAULT 0,
     
     -- Stats population
     hommes INT DEFAULT 0,
@@ -269,6 +273,7 @@ CREATE TABLE stats_nationales (
     menages_denombres INT DEFAULT 0,
     population_carto INT DEFAULT 0,
     population_collectee INT DEFAULT 0,
+    average_deces INT DEFAULT 0,
     
     -- Stats population
     hommes INT DEFAULT 0,

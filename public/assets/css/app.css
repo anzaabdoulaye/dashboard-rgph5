@@ -116,7 +116,7 @@ File: Main Css File
   --vz-footer-color: #878a99;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: rgba(242,143,0,0.8);
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -124,7 +124,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #fff;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-twocolumn-menu-iconview-bg: #fff;
@@ -167,7 +167,7 @@ File: Main Css File
 [data-theme=galaxy][data-bs-theme=dark]:root[data-sidebar=dark] {
   --vz-vertical-menu-bg: transparent;
   --vz-vertical-menu-border: #2a4562;
-  --vz-vertical-menu-item-color: #A4AAC7;
+  ---vz-vertical-menu-item-font-size: 25px;: #A4AAC7;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -175,7 +175,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #9ba5af;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #798694;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #798694;
   --vz-twocolumn-menu-iconview-bg: rgba(6, 30, 57, 0.3);
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -210,11 +210,11 @@ File: Main Css File
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: 0 1px 2px rgba(56, 65, 74, 0.15);
   --vz-headings-font-family: var(--vz-font-family-secondary);
-  --vz-vertical-menu-item-font-size: 0.9375rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.9375rem;
   --vz-vertical-menu-sub-item-font-size: 0.813rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #fff;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -222,7 +222,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-sidebar-user-bg: #f3f6f9;
@@ -276,7 +276,7 @@ File: Main Css File
 [data-theme=default][data-sidebar=dark] {
   --vz-vertical-menu-bg: var(--vz-primary);
   --vz-vertical-menu-border: var(--vz-primary);
-  --vz-vertical-menu-item-color: #abb9e8;
+  ---vz-vertical-menu-item-font-size: 25px;: #abb9e8;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -284,7 +284,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #abb9e8;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #838fb9;
+  --vz-vertical-menu-item-font-size: 25px;: 30px;: #838fb9;
   --vz-twocolumn-menu-iconview-bg: #3d4d82;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -369,11 +369,11 @@ File: Main Css File
   --vz-card-border-width-custom: 0;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: var(--vz-shadow);
-  --vz-vertical-menu-item-font-size: 0.9375rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.9375rem;
   --vz-vertical-menu-sub-item-font-size: 0.875rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -381,7 +381,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-sidebar-user-bg: #f1f4f7;
@@ -475,7 +475,7 @@ File: Main Css File
 [data-theme=corporate][data-sidebar=dark] {
   --vz-vertical-menu-bg: #2a3266;
   --vz-vertical-menu-border: #2a3266;
-  --vz-vertical-menu-item-color: #abb9e8;
+  ---vz-vertical-menu-item-font-size: 25px;: #abb9e8;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -483,7 +483,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #abb9e8;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #838fb9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #838fb9;
   --vz-twocolumn-menu-iconview-bg: #272e5f;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -585,11 +585,11 @@ File: Main Css File
   --vz-card-border-width-custom: 0;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: 0 1px 2px rgba(56, 65, 74, 0.15);
-  --vz-vertical-menu-item-font-size: 0.9375rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.9375rem;
   --vz-vertical-menu-sub-item-font-size: 0.875rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -597,7 +597,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-twocolumn-menu-iconview-bg: #fff;
@@ -692,7 +692,7 @@ File: Main Css File
 [data-theme=creative][data-sidebar=dark] {
   --vz-vertical-menu-bg: #1f2c3e;
   --vz-vertical-menu-border: #1f2c3e;
-  --vz-vertical-menu-item-color: #89929b;
+  ---vz-vertical-menu-item-font-size: 25px;: #89929b;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -700,7 +700,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #89929b;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #89929b;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #89929b;
   --vz-twocolumn-menu-iconview-bg: #223145;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -784,11 +784,11 @@ File: Main Css File
   --vz-card-border-width-custom: 1px;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: 0 1px 2px rgba(56, 65, 74, 0.15);
-  --vz-vertical-menu-item-font-size: 0.9375rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.9375rem;
   --vz-vertical-menu-sub-item-font-size: 0.813rem;
   --vz-vertical-menu-bg: transparent;
   --vz-vertical-menu-border: #e9ebec;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -796,7 +796,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-twocolumn-menu-iconview-bg: #fff;
@@ -899,7 +899,7 @@ File: Main Css File
 [data-theme=galaxy][data-sidebar=dark] {
   --vz-vertical-menu-bg: rgb(72, 38, 104);
   --vz-vertical-menu-border: rgb(72, 38, 104);
-  --vz-vertical-menu-item-color: #e2c4ff;
+  ---vz-vertical-menu-item-font-size: 25px;: #e2c4ff;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -907,7 +907,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #c2a7db;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #c2a7db;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #c2a7db;
   --vz-twocolumn-menu-iconview-bg: #432361;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -1116,11 +1116,11 @@ File: Main Css File
   --vz-card-border-width-custom: 0;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: 0 1px 2px rgba(56, 65, 74, 0.15);
-  --vz-vertical-menu-item-font-size: 0.925rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.925rem;
   --vz-vertical-menu-sub-item-font-size: 0.875rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), .15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -1128,7 +1128,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-twocolumn-menu-iconview-bg: #fff;
@@ -1223,7 +1223,7 @@ File: Main Css File
 [data-theme=interactive][data-sidebar=dark] {
   --vz-vertical-menu-bg: #132649;
   --vz-vertical-menu-border: #132649;
-  --vz-vertical-menu-item-color: #96a7c7;
+  ---vz-vertical-menu-item-font-size: 25px;: #96a7c7;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -1231,7 +1231,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #96a7c7;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #838fb9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #838fb9;
   --vz-twocolumn-menu-iconview-bg: #112241;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -1318,11 +1318,11 @@ File: Main Css File
   --vz-card-border-width-custom: 0;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: 0 3px 3px rgba(56, 65, 74, 0.1);
-  --vz-vertical-menu-item-font-size: 0.925rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.925rem;
   --vz-vertical-menu-sub-item-font-size: 0.8125rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -1330,7 +1330,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-sidebar-user-bg: #f1f4f7;
@@ -1424,7 +1424,7 @@ File: Main Css File
 [data-theme=material][data-sidebar=dark] {
   --vz-vertical-menu-bg: #151529;
   --vz-vertical-menu-border: #151529;
-  --vz-vertical-menu-item-color: #a3a6b7;
+  ---vz-vertical-menu-item-font-size: 25px;: #a3a6b7;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -1432,7 +1432,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #a3a6b7;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #9b9eb1;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #9b9eb1;
   --vz-twocolumn-menu-iconview-bg: #121222;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -1524,11 +1524,11 @@ File: Main Css File
   --vz-card-border-width-custom: 1px;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: none;
-  --vz-vertical-menu-item-font-size: 0.9375rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.9375rem;
   --vz-vertical-menu-sub-item-font-size: 0.875rem;
   --vz-vertical-menu-bg: #f6f8fa;
   --vz-vertical-menu-border: var(--vz-border-color);
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -1536,7 +1536,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: none;
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-sidebar-user-bg: #f1f4f7;
@@ -1630,7 +1630,7 @@ File: Main Css File
 [data-theme=minimal][data-sidebar=dark] {
   --vz-vertical-menu-bg: #0A2B3D;
   --vz-vertical-menu-border: #0A2B3D;
-  --vz-vertical-menu-item-color: #9aaab3;
+  ---vz-vertical-menu-item-font-size: 25px;: #9aaab3;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -1638,7 +1638,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #9aaab3;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #aeafaf;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #aeafaf;
   --vz-twocolumn-menu-iconview-bg: #092534;
   --vz-vertical-menu-box-shadow: none;
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -1725,11 +1725,11 @@ File: Main Css File
   --vz-card-border-width-custom: 0;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: 0 1px 2px rgba(56, 65, 74, 0.15);
-  --vz-vertical-menu-item-font-size: 0.925rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.925rem;
   --vz-vertical-menu-sub-item-font-size: 0.875rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), .15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -1737,7 +1737,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-twocolumn-menu-iconview-bg: #fff;
@@ -1832,7 +1832,7 @@ File: Main Css File
 [data-theme=modern][data-sidebar=dark] {
   --vz-vertical-menu-bg: #2e3230;
   --vz-vertical-menu-border: #2e3230;
-  --vz-vertical-menu-item-color: #a4b0bf;
+  ---vz-vertical-menu-item-font-size: 25px;: #a4b0bf;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -1840,7 +1840,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #a4b0bf;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #a4b0bf;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #a4b0bf;
   --vz-twocolumn-menu-iconview-bg: #344044;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -1925,11 +1925,11 @@ File: Main Css File
   --vz-card-border-width-custom: 0;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: 0 1px 2px rgba(56, 65, 74, 0.15);
-  --vz-vertical-menu-item-font-size: .925rem;
+  --vz-vertical-menu-item-font-size: 25px;: .925rem;
   --vz-vertical-menu-sub-item-font-size: 0.875rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -1937,7 +1937,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-twocolumn-menu-iconview-bg: #fff;
@@ -2032,7 +2032,7 @@ File: Main Css File
 [data-theme=saas][data-sidebar=dark] {
   --vz-vertical-menu-bg: #38454a;
   --vz-vertical-menu-border: #38454a;
-  --vz-vertical-menu-item-color: #a1b7bf;
+  ---vz-vertical-menu-item-font-size: 25px;: #a1b7bf;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -2040,7 +2040,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #a1b7bf;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #a1b7bf;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #a1b7bf;
   --vz-twocolumn-menu-iconview-bg: #344044;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -2145,11 +2145,11 @@ File: Main Css File
   --vz-card-border-width-custom: 0;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: var(--vz-shadow);
-  --vz-vertical-menu-item-font-size: 0.9688rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.9688rem;
   --vz-vertical-menu-sub-item-font-size: 0.9375rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -2157,7 +2157,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: none;
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-sidebar-user-bg: #f1f4f7;
@@ -2251,7 +2251,7 @@ File: Main Css File
 [data-theme=classic][data-sidebar=dark] {
   --vz-vertical-menu-bg: #321e46;
   --vz-vertical-menu-border: #321e46;
-  --vz-vertical-menu-item-color: #cbb7df;
+  ---vz-vertical-menu-item-font-size: 25px;: #cbb7df;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -2259,7 +2259,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #cbb7df;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #d1c0e3;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #d1c0e3;
   --vz-twocolumn-menu-iconview-bg: #3e2658;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -2364,11 +2364,11 @@ File: Main Css File
   --vz-card-border-width-custom: 0;
   --vz-card-header-border-width: 1px;
   --vz-card-shadow: var(--vz-shadow);
-  --vz-vertical-menu-item-font-size: 0.925rem;
+  --vz-vertical-menu-item-font-size: 25px;: 0.925rem;
   --vz-vertical-menu-sub-item-font-size: 0.875rem;
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), .15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -2376,7 +2376,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
   --vz-vertical-menu-box-shadow: var(--vz-shadow);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-twocolumn-menu-iconview-bg: #fff;
@@ -2471,7 +2471,7 @@ File: Main Css File
 [data-theme=vintage][data-sidebar=dark] {
   --vz-vertical-menu-bg: #2e3230;
   --vz-vertical-menu-border: #2e3230;
-  --vz-vertical-menu-item-color: #a4b0bf;
+  ---vz-vertical-menu-item-font-size: 25px;: #a4b0bf;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -2479,7 +2479,7 @@ File: Main Css File
   --vz-vertical-menu-sub-item-color: #a4b0bf;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #a4b0bf;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #a4b0bf;
   --vz-twocolumn-menu-iconview-bg: #344044;
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
@@ -3012,7 +3012,7 @@ File: Main Css File
 .navbar-menu {
   width: var(--vz-vertical-menu-width);
   z-index: 1002;
-  background: rgba(18,165,55,0.8) !important;
+  background: var(--vz-vertical-menu-bg);
   border-left: 1px solid var(--vz-vertical-menu-border);
   bottom: 0;
   margin-top: 0;
@@ -3032,8 +3032,8 @@ File: Main Css File
       -ms-flex-align: center;
           align-items: center;
   padding: 0.625rem 1.5rem;
-  color: var(--vz-vertical-menu-item-color);
-  font-size: var(--vz-vertical-menu-item-font-size);
+  color: var(---vz-vertical-menu-item-font-size: 25px;);
+  font-size: var(--vz-vertical-menu-item-font-size: 25px;);
   font-family: var(--vz-vertical-menu-item-font-family);
 }
 .navbar-menu .navbar-nav .nav-link.active {
@@ -3051,7 +3051,7 @@ File: Main Css File
 .navbar-menu .navbar-nav .nav-link svg {
   width: 18px;
   margin-left: 0.665rem;
-  color: var(--vz-vertical-menu-item-color);
+  color: var(---vz-vertical-menu-item-font-size: 25px;);
 }
 .navbar-menu .navbar-nav .nav-link .badge {
   margin-right: auto;
@@ -3338,7 +3338,7 @@ File: Main Css File
   display: none;
 }
 :is([data-layout=vertical], [data-layout=semibox])[data-sidebar-size=sm-hover] .navbar-menu .navbar-nav .menu-title i {
-  color: var(--vz-vertical-menu-item-color);
+  color: var(---vz-vertical-menu-item-font-size: 25px;);
   display: block;
   line-height: 36px;
   font-size: 1rem;
@@ -3433,7 +3433,7 @@ File: Main Css File
   width: var(--vz-vertical-menu-width-sm);
   z-index: 1;
   top: 0;
-  background-color: rgba(18,165,55,0.8) !important;
+  background-color: var(--vz-vertical-menu-bg);
 }
 :is([data-layout=vertical], [data-layout=semibox])[data-sidebar-size=sm] .logo span.logo-lg {
   display: none;
@@ -3495,7 +3495,7 @@ File: Main Css File
   width: calc(200px + var(--vz-vertical-menu-width-sm));
   -webkit-transition: none;
   transition: none;
-  background: rgba(18,165,55,0.8) !important;
+  background: var(--vz-vertical-menu-bg);
 }
 :is([data-layout=vertical], [data-layout=semibox])[data-sidebar-size=sm] .navbar-menu .navbar-nav .nav-item:hover > a.menu-link .icon-dual {
   fill: rgba(255, 255, 255, 0.16);
@@ -3518,7 +3518,7 @@ File: Main Css File
   right: var(--vz-vertical-menu-width-sm);
   position: absolute;
   width: 200px;
-  background: rgba(18,165,55,0.8) !important;
+  background: var(--vz-vertical-menu-bg);
   height: auto !important;
   padding: 0.5rem 0;
   border-radius: 0 0 3px 3px;
@@ -3624,7 +3624,7 @@ File: Main Css File
     top: calc(70px + var(--vz-grid-gutter-width));
     bottom: var(--vz-grid-gutter-width);
     padding: 0;
-    border-left: rgba(18,165,55,0.8) !important;
+    border-left: var(--vz-vertical-menu-bg);
     border-radius: 5px;
     padding: 10px 0;
     z-index: 1;
@@ -3670,13 +3670,13 @@ File: Main Css File
 .menu-title {
   letter-spacing: 0.05em;
   cursor: default;
-  font-size: 11px;
+  font-size: 22px;
   text-transform: uppercase;
-  color: var(--vz-vertical-menu-title-color);
+  color: var(--vz-vertical-menu-item-font-size: 30px;: 30px;);
   font-weight: var(--vz-font-weight-semibold);
 }
 .menu-title span {
-  padding: 12px 20px;
+  padding: 17px 25px;
   display: inline-block;
 }
 .menu-title i {
@@ -4164,7 +4164,7 @@ File: Main Css File
 [data-layout=twocolumn] .twocolumn-iconview .nav-icon {
   width: 42px;
   height: 42px;
-  color: var(--vz-vertical-menu-item-color);
+  color: var(---vz-vertical-menu-item-font-size: 25px;);
   line-height: 42px;
   z-index: 1;
   font-size: 22px;
@@ -4183,7 +4183,7 @@ File: Main Css File
 }
 [data-layout=twocolumn] .twocolumn-iconview .nav-icon .icon-dual {
   width: 18px;
-  color: var(--vz-vertical-menu-item-color);
+  color: var(---vz-vertical-menu-item-font-size: 25px;);
   fill: var(--vz-vertical-menu-item-bg);
 }
 [data-layout=twocolumn] .twocolumn-iconview .nav-icon.active {
@@ -6430,7 +6430,7 @@ code {
 }
 
 :root:is([data-sidebar=gradient], [data-sidebar=gradient-2], [data-sidebar=gradient-3], [data-sidebar=gradient-4]) {
-  --vz-vertical-menu-item-color: rgba(255, 255, 255, 0.5);
+  ---vz-vertical-menu-item-font-size: 25px;: rgba(255, 255, 255, 0.5);
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -6438,7 +6438,7 @@ code {
   --vz-vertical-menu-sub-item-color: rgba(255, 255, 255, 0.5);
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: rgba(255, 255, 255, 0.5);
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: rgba(255, 255, 255, 0.5);
   --vz-vertical-menu-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-vertical-menu-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
   --vz-sidebar-user-bg: rgba(255, 255, 255, 0.08);
@@ -6533,7 +6533,7 @@ code {
 [data-bs-theme=dark] {
   --vz-vertical-menu-bg: #fff;
   --vz-vertical-menu-border: #fff;
-  --vz-vertical-menu-item-color: #6d7080;
+  ---vz-vertical-menu-item-font-size: 25px;: #6d7080;
   --vz-vertical-menu-item-bg: rgba(var(--vz-primary-rgb), 0.15);
   --vz-vertical-menu-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-item-active-color: var(--vz-primary);
@@ -6541,12 +6541,12 @@ code {
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: var(--vz-primary);
   --vz-vertical-menu-sub-item-active-color: var(--vz-primary);
-  --vz-vertical-menu-title-color: #919da9;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #919da9;
 }
 [data-bs-theme=dark][data-sidebar=dark] {
   --vz-vertical-menu-bg: #212529;
   --vz-vertical-menu-border: #212529;
-  --vz-vertical-menu-item-color: #7c7f90;
+  ---vz-vertical-menu-item-font-size: 25px;: #7c7f90;
   --vz-vertical-menu-item-bg: rgba(255, 255, 255, 0.15);
   --vz-vertical-menu-item-hover-color: #fff;
   --vz-vertical-menu-item-active-color: #fff;
@@ -6554,7 +6554,7 @@ code {
   --vz-vertical-menu-sub-item-color: #7c7f90;
   --vz-vertical-menu-sub-item-hover-color: #fff;
   --vz-vertical-menu-sub-item-active-color: #fff;
-  --vz-vertical-menu-title-color: #5f6270;
+  --vz-vertical-menu-item-font-size: 25px;: 25px;: #5f6270;
   --vz-twocolumn-menu-iconview-bg: #292e32;
 }
 

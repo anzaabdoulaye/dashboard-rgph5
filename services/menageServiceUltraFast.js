@@ -148,11 +148,15 @@ async function getMainStats(filters = {}, user = null) {
     if (!row) {
       return getDefaultStats();
     }
+
+    const totalDeces = Number(row.average_deces || 0);
     
     return {
       totalMenages: Number(row.total_menages || 0),
       totalPopulation: Number(row.total_population || 0),
-      averageDeces: Number(row.average_deces || 0),
+      averageDeces: row.total_menages > 0 
+          ? Number(((totalDeces / row.total_menages) * 100 ).toFixed(2)) 
+          : 0,
       nbMenagesPlus10: Number(row.nb_menages_plus_10 || 0),
       nbMenagesSolo: Number(row.nb_menages_solo || 0),
       populationRurale: Number(row.population_rurale || 0),
