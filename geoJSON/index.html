@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cartes du Niger</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <h1>Carte des Communes du Niger</h1>
+    <div id="map"></div>
+
+    <h1>Carte des Départements du Niger</h1>
+    <div id="map0"></div>
+
+    <h1>Carte des Régions du Niger</h1>
+    <div id="map01"></div>
+
+    <script>
+        // Coordonnées et style de base
+        const CENTER_LAT = 17.5;
+        const CENTER_LON = 9.0;
+        const INITIAL_ZOOM = 3;
+
+        // Style pour les polygones
+        function styleCommunes(feature) {
+            return {
+                fillColor: '#800026',
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                fillOpacity: 0.5
+            };
+        }
+
+        // Fonction générique pour le chargement et l'affichage
+        function loadGeoJsonMap(mapId, geoJsonUrl, popupProperty) {
+            // 1. Initialisation de la carte sans tuiles de fond (selon votre demande)
+            const mapInstance = L.map(mapId).setView([CENTER_LAT, CENTER_LON], INITIAL_ZOOM);
+
+            fetch(geoJsonUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Erreur de chargement (${geoJsonUrl}): ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 2. Création de la couche GeoJSON
+                    const geoJsonLayer = L.geoJSON(data, {
+                        style: styleCommunes,
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties) {
+                                // Récupère la propriété du popup, ou affiche 'Inconnue'
+                                const nom = feature.properties[popupProperty] || 'Nom Inconnu';
+                                layer.bindPopup('<b>' + popupProperty + ':</b> ' + nom);
+                            }
+                        }
+                    });
+
+                    // 3. Ajout de la couche. IMPORTANT : La couche est créée *même si elle est vide*.
+                    geoJsonLayer.addTo(mapInstance);
+
+                    // 4. Ajuster le zoom uniquement si la couche a des limites valides
+                    // C'est la ligne qui cause l'erreur si la couche est vide. On la vérifie.
+                    const bounds = geoJsonLayer.getBounds();
+                    if (bounds.isValid()) {
+                        mapInstance.fitBounds(bounds);
+                    } else {
+                        // Affiche un message si aucune géométrie n'a été chargée
+                        console.warn(`Aucune donnée de géométrie valide trouvée pour la carte ${mapId}.`);
+                    }
+                })
+                .catch(error => {
+                    console.error(`Erreur sur ${geoJsonUrl}:`, error);
+                    alert(`Impossible de charger les données ${geoJsonUrl}. Vérifiez la console.`);
+                });
+        }
+
+        // --- APPEL DES FONCTIONS POUR CHAQUE CARTE ---
+
+        // Carte 1 : Communes
+        loadGeoJsonMap('map', 'CommuneNiger.geojson', 'NOM_COM');
+
+        // Carte 2 : Départements (Assurez-vous que la propriété pour le popup est correcte dans votre fichier)
+        loadGeoJsonMap('map0', 'DepartementNiger.geojson', 'adm_02'); // Supposons 'NOM_DEP'
+
+
+        // Carte 3 : Régions (Assurez-vous que la propriété pour le popup est correcte dans votre fichier)
+        loadGeoJsonMap('map01', 'RegionNiger.geojson', 'NOMREG'); // Supposons 'NOM_DEP'
+
+    </script>
+
+</body>
+
+</html>

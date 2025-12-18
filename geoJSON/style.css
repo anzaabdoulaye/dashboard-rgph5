@@ -1,0 +1,87 @@
+/*
+  Fichier: style.css
+  Objectif: Styliser la page et le conteneur Leaflet.
+*/
+
+/* 1. Réinitialisation de base pour une meilleure compatibilité */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    /* Couleur d'arrière-plan légère */
+}
+
+/* 2. Style de l'en-tête (optionnel mais recommandé) */
+h1 {
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 0;
+    color: #333;
+    background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
+}
+
+/* 3. Style essentiel du conteneur de la carte */
+/* L'ID #map est celui utilisé dans le code HTML */
+#map {
+    height: 300px;
+    width: 45%;
+    margin: 20px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    /* MODIFICATION ICI : DÉFINIR L'ARRIÈRE-PLAN DES CONTENEURS FEUILLES */
+    background-color: #f0f0f0;
+    /* Un gris très clair */
+}
+
+
+#map0 {
+    height: 300px;
+    width: 45%;
+    margin: 20px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    /* MODIFICATION ICI : DÉFINIR L'ARRIÈRE-PLAN DES CONTENEURS FEUILLES */
+    background-color: #f0f0f0;
+    /* Un gris très clair */
+}
+
+#map01 {
+    height: 300px;
+    width: 45%;
+    margin: 20px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    /* MODIFICATION ICI : DÉFINIR L'ARRIÈRE-PLAN DES CONTENEURS FEUILLES */
+    background-color: #f0f0f0;
+    /* Un gris très clair */
+}
+
+/* 4. Style des données GeoJSON (personnalisation avancée) */
+/* Ce style est généralement défini en JavaScript, mais voici un exemple de classe */
+/* Si vous aviez une classe personnalisée pour les entités Leaflet */
+.commune-polygon {
+    /* Ces propriétés seraient écrasées par les styles Leaflet par défaut ou JavaScript */
+    fill-color: #ff6060;
+    /* Rouge clair */
+    color: #8b0000;
+    /* Bordure rouge foncé */
+    weight: 2;
+    opacity: 1;
+    fill-opacity: 0.7;
+}
+
+/* 5. Style des popups Leaflet (pour un look plus moderne) */
+/* Notez le préfixe 'leaflet-' pour cibler les éléments internes */
+.leaflet-popup-content-wrapper {
+    border-radius: 6px;
+    padding: 1px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.25);
+}
+
+.leaflet-popup-content {
+    font-size: 14px;
+    font-weight: bold;
+    color: #444;
+}

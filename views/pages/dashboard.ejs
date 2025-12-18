@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     return '';
   };
-
+  
   const statsSpans = {
     menEnumeresSpan: 'mainStats.menagesEnumeres',
     menDenombresSpan: 'mainStats.menagesDenombres',
@@ -709,65 +709,93 @@ document.addEventListener('DOMContentLoaded', () => {
     return data;
   }
 
-  async function updateStats() {
+  /**
+ * Formate un nombre : ajoute des espaces pour les milliers et gère les décimales
+ * @param {number} num - Le nombre à formater
+ * @param {number} minDecimals - Minimum de décimales (défaut 0)
+ * @param {number} maxDecimals - Maximum de décimales (défaut 2 pour éviter les 15.510000)
+ */
+function formatNumber(num, minDecimals = 0, maxDecimals = 2) {
+    if (num === undefined || num === null || isNaN(num)) return '—';
+    
+    return new Intl.NumberFormat('fr-FR', {
+        minimumFractionDigits: minDecimals,
+        maximumFractionDigits: maxDecimals
+    }).format(num);
+}
+
+// 2. VOTRE MÉTHODE updateStats MISE À JOUR
+async function updateStats() {
     showLoader();
     try {
-      const paramsObj = {
-        region: getSelectValue('region'),
-        departement: getSelectValue('departement'),
-        commune: getSelectValue('commune'),
-        zd: getSelectValue('zd')
-      };
+        const paramsObj = {
+            region: getSelectValue('region'),
+            departement: getSelectValue('departement'),
+            commune: getSelectValue('commune'),
+            zd: getSelectValue('zd')
+        };
 
-      console.log('📊 PARAMS pour stats:', paramsObj);
-      const data = await fetchStats(paramsObj);
+        console.log('📊 PARAMS pour stats:', paramsObj);
+        const data = await fetchStats(paramsObj);
 
-	  // 💡 AJOUTEZ CETTE LIGNE
-  console.log('✅ DONNÉES STATS REÇUES:', data);
-  console.log("Structure mainStats (Filtre):", data.mainStats);
-console.log("Structure populationStats (Filtre):", data.populationStats);
+        console.log('✅ DONNÉES STATS REÇUES:', data);
+        // console.log("Structure mainStats (Filtre):", data.mainStats);
+        // console.log("Structure populationStats (Filtre):", data.populationStats);
 
-      // Mettre à jour tous les spans
-      Object.entries(statsSpans).forEach(([spanId, dataKey]) => {
-        const element = document.getElementById(spanId);
-        if (!element) return;
-        
-        let value = data;
+        // Mettre à jour tous les spans
+        Object.entries(statsSpans).forEach(([spanId, dataKey]) => {
+            const element = document.getElementById(spanId);
+            if (!element) return;
 
-		console.log(`[MAP] ${dataKey} => SPAN ${spanId}:`, value);
-        if (dataKey.includes('.')) {
-          const keys = dataKey.split('.');
-          keys.forEach(key => {
-            value = value ? value[key] : undefined;
-          });
-        } else {
-          value = data[dataKey];
-        }
-        
-        // Formater la valeur si nécessaire
-        if (spanId === 'tauxProgressionSpan' && value !== undefined) {
-          element.textContent = value + '%';
-        } else if (spanId === 'agriSpan' && value !== undefined) {
-          element.textContent = value + '%';
-        } else if (spanId === 'enfantSpan' && value !== undefined) {
-          element.textContent = value + '%';
-        } else if (spanId === 'rMasculiniteSpan' && value !== undefined) {
-          element.textContent = value.toFixed(2);
-        } else if (spanId === 'pa49Span' && value !== undefined) {
-          element.textContent = value.toFixed(2);
-        } else if (value !== undefined && value !== null) {
-          element.textContent = value;
-        } else {
-          element.textContent = '—';
-        }
-      });
+            // Récupération de la valeur brute
+            let value = data;
+            // console.log(`[MAP] ${dataKey} => SPAN ${spanId}:`, value);
+
+            if (dataKey.includes('.')) {
+                const keys = dataKey.split('.');
+                keys.forEach(key => {
+                    value = value ? value[key] : undefined;
+                });
+            } else {
+                value = data[dataKey];
+            }
+
+            // --- DÉBUT DES MODIFICATIONS DE FORMATAGE ---
+            
+            // Cas 1 : Pourcentages (Taux, Proportion...)
+            if (['tauxProgressionSpan', 'agriSpan', 'enfantSpan'].includes(spanId) && value !== undefined) {
+                // Affiche : "12,5 %" ou "1 200 %"
+                element.textContent = formatNumber(value, 0, 2) + ' %';
+            } 
+            // Cas 2 : Valeurs décimales précises (Ratios, Parité) - Remplace toFixed(2)
+            else if (['rMasculiniteSpan', 'pa49Span'].includes(spanId) && value !== undefined) {
+                // Affiche : "100,00" ou "0,50" (Force 2 décimales avec virgule)
+                element.textContent = formatNumber(value, 2, 2);
+            } 
+            // Cas 3 : Nombres standards (Population, Ménages) - Entiers
+            else if (value !== undefined && value !== null) {
+                // Affiche : "1 000 000" (Force 0 décimales pour les entiers, ou max 2 si c'est une moyenne)
+                // Si c'est un entier pur (nb habitants), on met maxDecimals à 0
+                const isInteger = [
+                    'menEnumeresSpan', 'menDenombresSpan', 'popCartoSpan', 
+                    'grandMenagesSpan', 'menagesSoloSpan', 'popRuraleSpan',
+                    'popTotaleSpan', 'totalHommesSpan', 'totalFemmesSpan'
+                ].includes(spanId);
+
+                element.textContent = formatNumber(value, 0, isInteger ? 0 : 2);
+            } 
+            // Cas 4 : Valeur vide
+            else {
+                element.textContent = '—';
+            }
+        });
+
     } catch (err) {
-      console.error('❌ Erreur dans updateStats:', err);
+        console.error('❌ Erreur dans updateStats:', err);
     } finally {
-      hideLoader();
+        hideLoader();
     }
-    
-  }
+}
 
   const debouncedUpdateStats = debounce(updateStats, 200);
 

@@ -22,7 +22,7 @@ File: Custom Bootstrap Css File
   --vz-red: #f06548;
   --vz-orange: #f1963b;
   --vz-yellow: #f7b84b;
-  --vz-green: #0ab39c;
+  --vz-green: rgba(18,165,55,0.8);
   --vz-teal: #02a8b5;
   --vz-cyan: #299cdb;
   --vz-white: #fff;
@@ -39,7 +39,7 @@ File: Custom Bootstrap Css File
   --vz-gray-900: #212529;
   --vz-primary: #518940;
   --vz-secondary: #3577f1;
-  --vz-success: #0ab39c;
+  --vz-success: rgba(18,165,55,0.8);
   --vz-info: #299cdb;
   --vz-warning: #f7b84b;
   --vz-danger: #f06548;
@@ -55,7 +55,7 @@ File: Custom Bootstrap Css File
   --vz-dark-rgb: 33, 37, 41;
   --vz-primary-text-emphasis: #364574;
   --vz-secondary-text-emphasis: #2d65cd;
-  --vz-success-text-emphasis: #099885;
+  --vz-success-text-emphasis: rgba(242,143,0,0.8);
   --vz-info-text-emphasis: #2385ba;
   --vz-warning-text-emphasis: #d29c40;
   --vz-danger-text-emphasis: #cc563d;
@@ -127,8 +127,8 @@ File: Custom Bootstrap Css File
   --vz-focus-ring-width: 0.25rem;
   --vz-focus-ring-opacity: 0.25;
   --vz-focus-ring-color: rgba(var(--vz-primary-rgb), 0.25);
-  --vz-form-valid-color: #0ab39c;
-  --vz-form-valid-border-color: #0ab39c;
+  --vz-form-valid-color: rgba(18,165,55,0.8);
+  --vz-form-valid-border-color: rgba(18,165,55,0.8);
   --vz-form-invalid-color: #f06548;
   --vz-form-invalid-border-color: #f06548;
 }
@@ -3429,10 +3429,10 @@ textarea.form-control-lg {
 
 .btn-success {
   --vz-btn-color: #fff;
-  --vz-btn-bg: #0ab39c;
-  --vz-btn-border-color: #0ab39c;
+  --vz-btn-bg: rgba(18,165,55,0.8);
+  --vz-btn-border-color: rgba(18,165,55,0.8);
   --vz-btn-hover-color: #fff;
-  --vz-btn-hover-bg: #099885;
+  --vz-btn-hover-bg: rgba(242,143,0,0.8);
   --vz-btn-hover-border-color: #088f7d;
   --vz-btn-focus-shadow-rgb: 47, 190, 171;
   --vz-btn-active-color: #fff;
@@ -3440,8 +3440,8 @@ textarea.form-control-lg {
   --vz-btn-active-border-color: #088675;
   --vz-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
   --vz-btn-disabled-color: #fff;
-  --vz-btn-disabled-bg: #0ab39c;
-  --vz-btn-disabled-border-color: #0ab39c;
+  --vz-btn-disabled-bg: rgba(18,165,55,0.8);
+  --vz-btn-disabled-border-color: rgba(18,165,55,0.8);
 }
 
 .btn-info {
@@ -3564,19 +3564,19 @@ textarea.form-control-lg {
 }
 
 .btn-outline-success {
-  --vz-btn-color: #0ab39c;
-  --vz-btn-border-color: #0ab39c;
+  --vz-btn-color: rgba(18,165,55,0.8);
+  --vz-btn-border-color: rgba(18,165,55,0.8);
   --vz-btn-hover-color: #fff;
-  --vz-btn-hover-bg: #0ab39c;
-  --vz-btn-hover-border-color: #0ab39c;
+  --vz-btn-hover-bg: rgba(18,165,55,0.8);
+  --vz-btn-hover-border-color: rgba(18,165,55,0.8);
   --vz-btn-focus-shadow-rgb: 10, 179, 156;
   --vz-btn-active-color: #fff;
-  --vz-btn-active-bg: #0ab39c;
-  --vz-btn-active-border-color: #0ab39c;
+  --vz-btn-active-bg: rgba(18,165,55,0.8);
+  --vz-btn-active-border-color: rgba(18,165,55,0.8);
   --vz-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
-  --vz-btn-disabled-color: #0ab39c;
+  --vz-btn-disabled-color: rgba(18,165,55,0.8);
   --vz-btn-disabled-bg: transparent;
-  --vz-btn-disabled-border-color: #0ab39c;
+  --vz-btn-disabled-border-color: rgba(18,165,55,0.8);
   --vz-gradient: none;
 }
 
@@ -4118,7 +4118,7 @@ textarea.form-control-lg {
 .nav {
   --vz-nav-link-padding-x: 1rem;
   --vz-nav-link-padding-y: 0.5rem;
-  --vz-nav-link-font-weight: ;
+  --vz-nav-link-font-weight: 900;
   --vz-nav-link-color: var(--vz-link-color);
   --vz-nav-link-hover-color: var(--vz-link-hover-color);
   --vz-nav-link-disabled-color: var(--vz-secondary-color);
@@ -4136,7 +4136,7 @@ textarea.form-control-lg {
   display: block;
   padding: var(--vz-nav-link-padding-y) var(--vz-nav-link-padding-x);
   font-size: var(--vz-nav-link-font-size);
-  font-weight: var(--vz-nav-link-font-weight);
+  font-weight: 800;
   color: var(--vz-nav-link-color);
   background: none;
   border: 0;
@@ -4329,7 +4329,7 @@ textarea.form-control-lg {
 .navbar-nav {
   --vz-nav-link-padding-x: 0;
   --vz-nav-link-padding-y: 0.5rem;
-  --vz-nav-link-font-weight: ;
+  --vz-nav-link-font-weight: 900;
   --vz-nav-link-color: var(--vz-navbar-color);
   --vz-nav-link-hover-color: var(--vz-navbar-hover-color);
   --vz-nav-link-disabled-color: var(--vz-navbar-disabled-color);

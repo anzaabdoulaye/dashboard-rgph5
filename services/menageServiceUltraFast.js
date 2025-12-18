@@ -148,11 +148,15 @@ async function getMainStats(filters = {}, user = null) {
     if (!row) {
       return getDefaultStats();
     }
+
+    const totalDeces = Number(row.average_deces || 0);
     
     return {
       totalMenages: Number(row.total_menages || 0),
       totalPopulation: Number(row.total_population || 0),
-      averageDeces: Number(row.average_deces || 0),
+      averageDeces: row.total_menages > 0 
+          ? Number(((totalDeces / row.total_menages) * 100 ).toFixed(2)) 
+          : 0,
       nbMenagesPlus10: Number(row.nb_menages_plus_10 || 0),
       nbMenagesSolo: Number(row.nb_menages_solo || 0),
       populationRurale: Number(row.population_rurale || 0),
@@ -347,6 +351,24 @@ async function getPyramideAges(filters = {}, user = null) {
   }, CACHE_TTL.PYRAMIDE);
 }
 
+async function getPopulationByRegion() {
+  const sql = `
+    SELECT
+      code_region AS regionCode,
+      region AS regionName,
+      SUM(xm20) AS populationCarto,
+      SUM(xm40) AS populationCollectee
+    FROM tmenage
+    GROUP BY code_region, region
+    ORDER BY region ASC
+  `;
+  const rows = await menageDB.query(sql, { type: QueryTypes.SELECT });
+  return rows.map(r => ({
+    region: r.regionName,
+    carto: Number(r.populationCarto || 0),
+    collectee: Number(r.populationCollectee || 0)
+  }));
+}
 /* Select dynamiques (Zones géographiques)  */
 
 async function getRegions(user = null) {
@@ -453,6 +475,7 @@ module.exports = {
   getProportionMenagesAgricoles,
   getAverageEmigresPerMenage,
   getPyramideAges,
+  getPopulationByRegion,
   getRegions,
   getDepartements,
   getCommunes,

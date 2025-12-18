@@ -135,6 +135,16 @@
             </div>
         </div>
     </div>
+    <div class="col-xl-6">
+		<div class="card">
+			<div class="card-header">
+				<h4 class="card-title mb-0">Population collectée vs cartographiée par région</h4>
+			</div>
+			<div class="card-body pie-container" style="width: 600px; height: 200px;">
+				    <canvas id="popChartBarRegions" height="400"></canvas>
+			</div>
+		</div>
+	</div>
 </div>
 
 <script src="assets/libs/chart.js/chart.umd.js"></script>
@@ -270,6 +280,7 @@
                     updatePyramideChart(pyraData);
                     updateGenderChart(data.populationStats || {});
                     updateProgressionChart(data.mainStats || {});
+                    updatePopCollectéVsCartoRegion(data.populationCollecteeCarto || {});
                 }
             } catch (err) {
                 console.error('Erreur updateCharts:', err);
@@ -420,7 +431,55 @@
                 });
             }
         }
+        
+        function updatePopCollectéVsCartoRegion(stats){
+              /* Population par région - bar chart (ne se recharge jamais) */
+        if (!popChartBarRegions) {
+            const regionsData = stats.populationCollecteeCarto || [];
 
+            if (regionsData.length > 0) {
+                const labelsRegions = regionsData.map(r => r.region);
+                const cartoData = regionsData.map(r => r.carto);
+                const collecteeData = regionsData.map(r => r.collectee);
+
+
+                const ctxBarRegions = document.getElementById("popChartBarRegions");
+
+                //Ajuste automatiquement la hauteur (50px par région)
+                const canvasHeight = Math.max(300, regionsData.length *900);
+                ctxBarRegions.height = canvasHeight;
+
+                popChartBarRegions = new Chart(ctxBarRegions, {
+                    type: "bar",
+                    data: {
+                        labels: labelsRegions,
+                        datasets: [
+                            { label: "Cartographiée", data: cartoData, backgroundColor: "#12A537" },
+                            { label: "Collectée", data: collecteeData, backgroundColor: "#F28F00" }
+                        ]
+                    },
+                    options: {
+                        indexAxis: "y",
+                        responsive: true,
+                         maintainAspectRatio: false,
+                        scales: {
+                            x: { beginAtZero: true }
+                        },
+                        plugins: {
+                            legend: { position: "top" },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.dataset.label + ": " + Number(context.raw).toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        }
         // --- 7. LISTENERS ---
         if (isActiveSelect(selects.region)) {
             selects.region.addEventListener('change', async () => {

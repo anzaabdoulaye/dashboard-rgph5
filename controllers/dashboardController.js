@@ -206,12 +206,13 @@ exports.getStats = async (req, res) => {
     } else {
       console.log(`🔄 Cache MISS ou INCOMPLET (Recalcul total) - Clé: ${cacheKey}`);
       
-      const [mainStats, populationStats, proportionAgricoles, averageEmigres, pyramideAges] = await Promise.all([
+      const [mainStats, populationStats, proportionAgricoles, averageEmigres, pyramideAges, populationCollecteeCarto] = await Promise.all([
         menageService.getMainStats(finalFilters, user),
         menageService.getPopulationStatsCombined(finalFilters, user),
         menageService.getProportionMenagesAgricoles(finalFilters, user),
         menageService.getAverageEmigresPerMenage(finalFilters, user),
-        menageService.getPyramideAges(finalFilters, user)
+        menageService.getPyramideAges(finalFilters, user),
+        menageService.getPopulationByRegion()
       ]);
 
       stats = {
@@ -219,7 +220,8 @@ exports.getStats = async (req, res) => {
         populationStats,
         proportionAgricoles,
         averageEmigres,
-        pyramideAges
+        pyramideAges,
+        populationCollecteeCarto
       };
 
       // Mise à jour du cache

@@ -17,9 +17,8 @@ La commande est incorrecte. Voici la bonne méthode:
 mysql> /home/hp/Documents/BCR/gendashboard/dashboard-bcr/migrations/01_create_indexes.sql;
 
 # ✅ BONNE méthode (depuis le terminal)
-mysql -u root -p menage < /home/hp/Documents/BCR/gendashboard/dashboard-bcr/migrations/01_create_indexes.sql
+mysql -u root -p menage < /home/hp/Downloads/dashboard-bcr-genspark_ai_developer/migrations/01_create_indexes.sql
 ```
-
 ## 🚀 Installation Complète en 3 Étapes
 
 ### Étape 1: Naviguer vers votre projet
