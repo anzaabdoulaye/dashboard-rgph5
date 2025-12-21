@@ -206,7 +206,7 @@ exports.getStats = async (req, res) => {
     } else {
       console.log(`🔄 Cache MISS ou INCOMPLET (Recalcul total) - Clé: ${cacheKey}`);
       
-      const [mainStats, populationStats, proportionAgricoles, averageEmigres, pyramideAges, populationCollecteeCarto] = await Promise.all([
+      const [mainStats, populationStats, proportionAgricoles, averageEmigres, pyramideAges, regionStats] = await Promise.all([
         menageService.getMainStats(finalFilters, user),
         menageService.getPopulationStatsCombined(finalFilters, user),
         menageService.getProportionMenagesAgricoles(finalFilters, user),
@@ -221,7 +221,7 @@ exports.getStats = async (req, res) => {
         proportionAgricoles,
         averageEmigres,
         pyramideAges,
-        populationCollecteeCarto
+        regionStats
       };
 
       // Mise à jour du cache
@@ -273,10 +273,11 @@ exports.showCharts = async (req, res) => {
       ({ mainStats, populationStats, pyramideAges} = chartsCache[cacheKey]);
     } else {
       // Requêtes SQL lourdes en parallèle AVEC l'utilisateur
-      [mainStats, populationStats, pyramideAges] = await Promise.all([
+      [mainStats, populationStats, pyramideAges, regionStats] = await Promise.all([
         menageService.getMainStats(filters, user),
         menageService.getPopulationStatsCombined(filters, user),
-        menageService.getPyramideAges(filters, user)
+        menageService.getPyramideAges(filters, user),
+        menageService.getPopulationByRegion()
       ]);
 
       // Stocker dans le cache
@@ -317,6 +318,7 @@ exports.showCharts = async (req, res) => {
       populationCarto: mainStats.cartographie,
       populationCollectee: mainStats.collectee,
       pyramideAges,
+      regionStats,
       selects: { 
         regions: prepareSelectOptions(regions, 'region', filters.region, user),
         departements: prepareSelectOptions(departements, 'departement', filters.departement, user),

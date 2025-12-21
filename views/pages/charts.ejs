@@ -35,7 +35,7 @@
                         <label>Région</label>
                         <% if (user.canChangeRegion) { %>
                             <select id="region" class="form-select">
-                                <option value="">-- Sélectionner --</option>
+                                <option value="">NATIONAL</option>
                                 <% selects.regions.forEach(region => { %>
                                     <option value="<%= region.code_region %>"><%= region.region %></option>
                                 <% }); %>
@@ -140,9 +140,9 @@
 			<div class="card-header">
 				<h4 class="card-title mb-0">Population collectée vs cartographiée par région</h4>
 			</div>
-			<div class="card-body pie-container" style="width: 600px; height: 200px;">
-				    <canvas id="popChartBarRegions" height="400"></canvas>
-			</div>
+			<div class="card-body pie-container" style="width: 100%; min-height: 300px;">
+    <canvas id="popChartBarRegions"></canvas>
+</div>
 		</div>
 	</div>
 </div>
@@ -161,7 +161,7 @@
             zd: document.getElementById('zd')
         };
         
-        let charts = { pyramide: null, gender: null, progression: null };
+        let charts = { pyramide: null, gender: null, progression: null,barRegions: null };
         const isActiveSelect = (element) => element && element.tagName === 'SELECT';
 
         const getSelectValue = (elementId) => {
@@ -275,12 +275,15 @@
                     // Vérification des clés pour Pyramide
                     // Supporte les deux formats possibles (pyramideAges ou pyramideData)
                     const pyraData = data.pyramideAges || data.pyramideData || [];
+                    const regiProg = data.regionStats || [];
                     console.log("Données Pyramide reçues:", pyraData.length, "entrées");
+                    console.log("Données Progression reçues:", regiProg.length, "entrées");
+
                     
                     updatePyramideChart(pyraData);
                     updateGenderChart(data.populationStats || {});
                     updateProgressionChart(data.mainStats || {});
-                    updatePopCollectéVsCartoRegion(data.populationCollecteeCarto || {});
+                    updatePopCollectéVsCartoRegion(regiProg);
                 }
             } catch (err) {
                 console.error('Erreur updateCharts:', err);
@@ -432,54 +435,88 @@
             }
         }
         
-        function updatePopCollectéVsCartoRegion(stats){
-              /* Population par région - bar chart (ne se recharge jamais) */
-        if (!popChartBarRegions) {
-            const regionsData = stats.populationCollecteeCarto || [];
+        // Remplacez la fonction updatePopCollectéVsCartoRegion par ceci :
 
-            if (regionsData.length > 0) {
-                const labelsRegions = regionsData.map(r => r.region);
-                const cartoData = regionsData.map(r => r.carto);
-                const collecteeData = regionsData.map(r => r.collectee);
+function updatePopCollectéVsCartoRegion(dataArray) {
+    const ctx = document.getElementById("popChartBarRegions");
+    if (!ctx) return;
 
+    // 1. Correction de la récupération des données
+    // On reçoit directement le tableau, pas besoin de faire .regionStats
+    const regionsData = Array.isArray(dataArray) ? dataArray : [];
 
-                const ctxBarRegions = document.getElementById("popChartBarRegions");
+    if (regionsData.length === 0) {
+        console.warn("Pas de données régionales à afficher");
+        return;
+    }
 
-                //Ajuste automatiquement la hauteur (50px par région)
-                const canvasHeight = Math.max(300, regionsData.length *900);
-                ctxBarRegions.height = canvasHeight;
+    // 2. Préparation des labels et données
+    const labelsRegions = regionsData.map(r => r.region);
+    const cartoData = regionsData.map(r => r.carto);
+    const collecteeData = regionsData.map(r => r.collectee);
 
-                popChartBarRegions = new Chart(ctxBarRegions, {
-                    type: "bar",
-                    data: {
-                        labels: labelsRegions,
-                        datasets: [
-                            { label: "Cartographiée", data: cartoData, backgroundColor: "#12A537" },
-                            { label: "Collectée", data: collecteeData, backgroundColor: "#F28F00" }
-                        ]
-                    },
-                    options: {
-                        indexAxis: "y",
-                        responsive: true,
-                         maintainAspectRatio: false,
-                        scales: {
-                            x: { beginAtZero: true }
-                        },
-                        plugins: {
-                            legend: { position: "top" },
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        return context.dataset.label + ": " + Number(context.raw).toLocaleString();
-                                    }
-                                }
-                            }
+    // 3. Gestion de la hauteur dynamique
+    // On compte 60px par barre pour que ce soit lisible, avec un min de 300px
+    const dynamicHeight = Math.max(300, regionsData.length * 60);
+    
+    // On applique la hauteur au conteneur PARENT et au Canvas
+    ctx.parentNode.style.height = `${dynamicHeight}px`;
+    ctx.height = dynamicHeight;
+
+    // 4. Création ou Mise à jour du graphique
+    // Si le graphique existe déjà, on le détruit pour éviter les bugs de redimensionnement vertical
+    if (charts.barRegions) {
+        charts.barRegions.destroy();
+    }
+
+    charts.barRegions = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labelsRegions,
+            datasets: [
+                { 
+                    label: "Cartographiée", 
+                    data: cartoData, 
+                    backgroundColor: "#12A537",
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                },
+                { 
+                    label: "Collectée", 
+                    data: collecteeData, 
+                    backgroundColor: "#F28F00",
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                }
+            ]
+        },
+        options: {
+            indexAxis: "y", // Barres horizontales
+            responsive: true,
+            maintainAspectRatio: false, // Indispensable pour le scroll vertical
+            scales: {
+                x: { 
+                    beginAtZero: true,
+                    grid: { display: true, drawBorder: false }
+                },
+                y: {
+                    grid: { display: false }
+                }
+            },
+            plugins: {
+                legend: { position: "top" },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            // Formatage des milliers
+                            return context.dataset.label + ": " + Number(context.raw).toLocaleString('fr-FR');
                         }
                     }
-                });
+                }
             }
         }
-        }
+    });
+}
         // --- 7. LISTENERS ---
         if (isActiveSelect(selects.region)) {
             selects.region.addEventListener('change', async () => {

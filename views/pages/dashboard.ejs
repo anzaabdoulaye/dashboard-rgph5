@@ -38,74 +38,74 @@
       
 <div class="row">
   <!-- Région -->
-  <div class="col-3">
-    <label>Région</label>
-    <% if (user.canChangeRegion) { %>
-      <!-- ROLE_GLOBAL : Select actif avec options préchargées -->
-      <select id="region" class="form-select">
-        <option value="">-- Sélectionner --</option>
-        <% selects.regions.forEach(region => { %>
-          <option value="<%= region.code_region %>"><%= region.region %></option>
-        <% }); %>
-      </select>
-    <% } else { %>
-      <!-- Rôles REGIONAL, DEPARTEMENTAL, COMMUNAL : Région fixée -->
-      <% const defaultRegion = user.defaultRegion || selects.regions[0]?.code_region || ''; %>
-      <% const defaultRegionName = selects.regions[0]?.region || 'Région non disponible'; %>
-      
-      <input type="hidden" id="region" value="<%= defaultRegion %>">
-      <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-        <%= defaultRegionName %>
+      <div class="col-3">
+        <label>Région</label>
+        <% if (user.canChangeRegion) { %>
+          <!-- ROLE_GLOBAL : Select actif avec options préchargées -->
+          <select id="region" class="form-select">
+            <option value="">NATIONAL</option>
+            <% selects.regions.forEach(region => { %>
+              <option value="<%= region.code_region %>"><%= region.region %></option>
+            <% }); %>
+          </select>
+        <% } else { %>
+          <!-- Rôles REGIONAL, DEPARTEMENTAL, COMMUNAL : Région fixée -->
+          <% const defaultRegion = user.defaultRegion || selects.regions[0]?.code_region || ''; %>
+          <% const defaultRegionName = selects.regions[0]?.region || 'Région non disponible'; %>
+          
+          <input type="hidden" id="region" value="<%= defaultRegion %>">
+          <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+            <%= defaultRegionName %>
+          </div>
+        <% } %>
       </div>
-    <% } %>
-  </div>
   
-  <!-- Département -->
-<div class="col-3">
-  <label>Département</label>
-  <% if (user.canChangeDepartement) { %>
-    <select id="departement" class="form-select">
-      <option value="">-- Sélectionner --</option>
-    </select>
-  <% } else { %>
-    <% const defaultDept = user.defaultDepartement || selects.departements[0]?.code_departement || ''; %>
-    <% const defaultDeptName = selects.departements[0]?.departement || 'Département non disponible'; %>
-    
-    <input type="hidden" id="departement" value="<%= defaultDept %>">
-    <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-      <%= defaultDeptName %>
+        <!-- Département -->
+      <div class="col-3">
+        <label>Département</label>
+        <% if (user.canChangeDepartement) { %>
+          <select id="departement" class="form-select">
+            <option value="">-- Sélectionner --</option>
+          </select>
+        <% } else { %>
+          <% const defaultDept = user.defaultDepartement || selects.departements[0]?.code_departement || ''; %>
+          <% const defaultDeptName = selects.departements[0]?.departement || 'Département non disponible'; %>
+          
+          <input type="hidden" id="departement" value="<%= defaultDept %>">
+          <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+            <%= defaultDeptName %>
+          </div>
+        <% } %>
+      </div>
+  
+      <!-- Commune -->
+      <div class="col-3">
+        <label>Commune</label>
+        <% if (user.canChangeCommune) { %>
+          <!-- ROLE_GLOBAL, REGIONAL, DEPARTEMENTAL : Select actif -->
+          <select id="commune" class="form-select">
+            <option value="">-- Sélectionner --</option>
+          </select>
+        <% } else { %>
+          <!-- ROLE_COMMUNAL : Commune fixée -->
+          <% const defaultCommune = user.defaultCommune || selects.communes[0]?.code_commune || ''; %>
+          <% const defaultCommuneName = selects.communes[0]?.commune || 'Commune non disponible'; %>
+          
+          <input type="hidden" id="commune" value="<%= defaultCommune %>">
+          <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
+            <%= defaultCommuneName %>
+          </div>
+        <% } %>
     </div>
-  <% } %>
-</div>
   
-  <!-- Commune -->
-  <div class="col-3">
-    <label>Commune</label>
-    <% if (user.canChangeCommune) { %>
-      <!-- ROLE_GLOBAL, REGIONAL, DEPARTEMENTAL : Select actif -->
-      <select id="commune" class="form-select">
+    <!-- ZD -->
+    <div class="col-3">
+      <label>Zone de dénombrement (ZD)</label>
+      <!-- TOUS les rôles peuvent changer de ZD -->
+      <select id="zd" class="form-select">
         <option value="">-- Sélectionner --</option>
       </select>
-    <% } else { %>
-      <!-- ROLE_COMMUNAL : Commune fixée -->
-      <% const defaultCommune = user.defaultCommune || selects.communes[0]?.code_commune || ''; %>
-      <% const defaultCommuneName = selects.communes[0]?.commune || 'Commune non disponible'; %>
-      
-      <input type="hidden" id="commune" value="<%= defaultCommune %>">
-      <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-        <%= defaultCommuneName %>
-      </div>
-    <% } %>
-  </div>
-  
-  <!-- ZD -->
-  <div class="col-3">
-    <label>Zone de dénombrement (ZD)</label>
-    <!-- TOUS les rôles peuvent changer de ZD -->
-    <select id="zd" class="form-select">
-      <option value="">-- Sélectionner --</option>
-    </select>
-  </div>
+    </div>
 </div>
 
     </div>
@@ -116,7 +116,7 @@
 	<div class="card crm-widget">
 		<div class="card-body p-0">
 			<div class="row row-cols-xxl-6 row-cols-lg-3 row-cols-md-2 row-cols-1 g-0">
-				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+				<div class="col"  >
 					<div class="py-4 px-3">
 						<h5 class="text-muted text-uppercase fs-13">NB MEN ENUMERES
 							<i class=" ri-team-line text-success fs-18 float-end align-middle"></i>
@@ -134,7 +134,7 @@
 					</div>
 				</div>
 
-				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+				<div class="col"  >
 					<div class="mt-3 mt-md-0 py-4 px-3">
 						<h5 class="text-muted text-uppercase fs-13">NB MEN DENOMBRES
 							<i class="ri-team-fill text-success fs-18 float-end align-middle"></i>
@@ -148,29 +148,8 @@
 							</div>
 						</div>
 					</div>
-				</div>
-				<!-- end col -->
-				<!--
-				<div class="col">
-					<div class="py-4 px-3">
-						<h5 class="text-muted text-uppercase fs-13">POP CARTO
-							<i class=" ri-team-line text-success fs-18 float-end align-middle"></i>
-						</h5>
-						<div class="d-flex align-items-center">
-							<div class="flex-shrink-0">
-								<i class=" ri-team-line display-6 text-muted cfs-22"></i>
-							</div>
-							<div class="flex-grow-1 ms-3">
-								<h2 class="mb-0 cfs-22">
-									<span id="popSpan" class="counter-value">stats.totalPopulation ?? 0</span>
-								</h2>
-							</div>
-						</div>
-					</div>
-				</div> -->
-				<!-- end col -->
-				
-				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+				</div>	
+				<div class="col" >
 					<div class="mt-3 mt-md-0 py-4 px-3">
 						<h5 class="text-muted text-uppercase fs-13">TOTAL HOMMES
 							<i class=" ri-men-fill text-danger fs-18 float-end align-middle"></i>
@@ -187,7 +166,7 @@
 					</div>
 				</div>
 				<!-- end col -->
-				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+				<div class="col"  >
 					<div class="mt-3 mt-lg-0 py-4 px-3">
 						<h5 class="text-muted text-uppercase fs-13">TOTAL FEMMES
 							<i class="ri-women-fill text-success fs-18 float-end align-middle"></i>
@@ -204,7 +183,7 @@
 					</div>
 				</div>
 				<!-- end col -->
-				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+				<div class="col"  >
 					<div class="mt-3 mt-md-0 py-4 px-3">
 						<h5 class="text-muted text-uppercase fs-13">POP TOTALE
 							<i class="ri-team-fill text-success fs-18 float-end align-middle"></i>
@@ -220,7 +199,7 @@
 					</div>
 				</div>
 				<!-- end col -->
-				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+				<div class="col"  >
 					<div class="mt-3 mt-md-0 py-4 px-3">
 						<h5 class="text-muted text-uppercase fs-13">POP CARTO
 							<i class="ri-team-fill text-success fs-18 float-end align-middle"></i>
@@ -235,7 +214,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
+				<div class="col"  >
 					<div class="mt-3 mt-md-0 py-4 px-3">
 						<h5 class="text-muted text-uppercase fs-13">POP RURALE
 							<i class="ri-team-fill text-success fs-18 float-end align-middle"></i>
@@ -302,8 +281,8 @@
 						</div>
 					</div>
 				</div>-->
-				<div class="col"  style="flex: 0 0 14.28%; max-width: 14.28%;">
-					<div class="mt-3 mt-md-0 py-4 px-3">
+				<div class="col">
+					<div class="mt-3 mt-lg-0 py-4 px-3">
 						<h5 class="text-muted text-uppercase fs-13">ECART NMC ET NMD
 							<i class="ri-group-fill text-danger fs-18 float-end align-middle"></i>
 						</h5>
@@ -961,9 +940,9 @@ async function updateStats() {
     const userRole = '<%= user.role %>';
     console.log('👤 ROLE_GLOBAL initialisation...');
     try {
-      // ===== ROLE_GLOBAL : Charger toutes les régions et stats nationales =====
+      // ===== ROLE_GLOBAL : Charger toutes les régions et stats -- Sélectionner --es =====
       if (userRole === 'ROLE_GLOBAL') {
-        console.log('📊 Initialisation stats nationales ROLE_GLOBAL');
+        console.log('📊 Initialisation stats -- Sélectionner --es ROLE_GLOBAL');
         // updateStats();  <--- Supprimer ou commenter cette ligne.
 
         // 1. Charger les régions dans le select
@@ -990,7 +969,7 @@ async function updateStats() {
         // 3. Charger LES STATS GLOBALES (sans filtres) UNE SEULE FOIS
         await updateStats(); // <--- Assurez-vous qu'il est ici et qu'il est attendu (await) si possible.
 
-        console.log('✅ ROLE_GLOBAL : Stats nationales chargées');
+        console.log('✅ ROLE_GLOBAL : Stats -- Sélectionner --es chargées');
         return; // On sort pour ROLE_GLOBAL
       }
       
