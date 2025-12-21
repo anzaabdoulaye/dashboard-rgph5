@@ -1210,7 +1210,7 @@ function toBounds(a, b) {
  * ]);
  * ```
  *
- * Caution: if the area crosses the antimeridian (often confused with the International Date Line), you must specify corners _outside_ the [-180, 180] degrees longitude range.
+ * Caution: if the area crosses the antimeridian (often confused with the Inter-- Sélectionner -- Date Line), you must specify corners _outside_ the [-180, 180] degrees longitude range.
  *
  * Note that `LatLngBounds` does not inherit from Leaflet's `Class` object,
  * which means new classes can't inherit from it, and new methods
@@ -1422,7 +1422,7 @@ LatLngBounds.prototype = {
 	}
 };
 
-// TODO International date line?
+// TODO Inter-- Sélectionner -- date line?
 
 // @factory L.latLngBounds(corner1: LatLng, corner2: LatLng)
 // Creates a `LatLngBounds` object by defining two diagonally opposite corners of the rectangle.
@@ -1719,7 +1719,7 @@ var Earth = extend({}, CRS, {
 	wrapLng: [-180, 180],
 
 	// Mean Earth Radius, as recommended for use by
-	// the International Union of Geodesy and Geophysics,
+	// the Inter-- Sélectionner -- Union of Geodesy and Geophysics,
 	// see https://rosettacode.org/wiki/Haversine_formula
 	R: 6371000,
 

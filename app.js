@@ -73,10 +73,14 @@ app.use(express.static(path.join(__dirname, 'public'), {
 
 // Configuration des sessions
 app.use(session({
-  secret: 'votre-secret-key', // à changer clé en production
+  secret: 'votre_secret',
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // Mettre à true si HTTPS
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 3600000, // 1 heure (en millisecondes)
+    secure: false,   // mettre à true si vous êtes en HTTPS
+    httpOnly: true   // protection contre les attaques XSS
+  } // Mettre à true si HTTPS
 }));
 
 // Middleware pour passer les messages aux vues
