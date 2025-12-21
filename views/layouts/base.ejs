@@ -90,6 +90,29 @@ $(document).ready(function() {
         }
     });
 })();
+
+    const SESSION_TIMEOUT = 3600000; 
+
+    let sessionTimer;
+
+    function startSessionTimer() {
+        // Si un timer existe déjà, on le nettoie (pour la session glissante)
+        if (sessionTimer) clearTimeout(sessionTimer);
+
+        sessionTimer = setTimeout(() => {       
+            // Redirection vers la route de déconnexion pour nettoyer proprement la session
+            window.location.href = '/auth/logout'; 
+        }, SESSION_TIMEOUT);
+    }
+
+    // Relancer le timer à chaque interaction (Session Glissante)
+    // Cela permet de ne pas déconnecter l'utilisateur s'il est actif
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, startSessionTimer);
+    });
+
+    // Initialisation au chargement de la page
+    startSessionTimer();
 </script>
 </body>
 </html>

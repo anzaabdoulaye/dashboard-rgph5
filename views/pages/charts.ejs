@@ -35,7 +35,7 @@
                         <label>Région</label>
                         <% if (user.canChangeRegion) { %>
                             <select id="region" class="form-select">
-                                <option value="">-- Sélectionner --</option>
+                                <option value="">NATIONAL</option>
                                 <% selects.regions.forEach(region => { %>
                                     <option value="<%= region.code_region %>"><%= region.region %></option>
                                 <% }); %>
