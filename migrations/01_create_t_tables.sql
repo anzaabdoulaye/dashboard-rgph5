@@ -296,22 +296,6 @@ CREATE TABLE `thabitat` (
   `h1426` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- menage.tlevel1 definition
-
-CREATE TABLE `tlevel1` (
-  `level-1-id` int NOT NULL,
-  `code_region` varchar(1) DEFAULT NULL,
-  `region` varchar(50) NOT NULL,
-  `code_departement` varchar(3) DEFAULT NULL,
-  `departement` varchar(150) NOT NULL,
-  `code_commune` varchar(5) DEFAULT NULL,
-  `commune` varchar(150) NOT NULL,
-  `mo_zs` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `mo_zd` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `mo_id` int DEFAULT NULL,
-  PRIMARY KEY (`level-1-id`),
-  UNIQUE KEY `mo_zs` (`mo_zs`,`mo_zd`,`mo_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- menage.tmenage definition
 

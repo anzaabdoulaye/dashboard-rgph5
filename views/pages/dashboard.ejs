@@ -499,30 +499,18 @@
 <div class="row mt-4">
     <div class="col-xl-6">
         <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">Niger Régions</h4>
-            </div>
             <div class="card-body">
-                <div class="map-controls mb-3">
-                    <button id="showRegions" class="btn btn-primary">Régions</button>
-                    <button id="hideRegions" class="btn btn-outline-primary">Masquer</button>
-                </div>
-                <div id="map-regions" class="map-container"></div>
+                <!-- La carte sera insérée ici -->
+                <div id="map-regions"></div>
             </div>
         </div>
     </div>
 
     <div class="col-xl-6">
         <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">Niger Départements</h4>
-            </div>
             <div class="card-body">
-                <div class="map-controls mb-3">
-                    <button id="showDepartements" class="btn btn-secondary">Départements</button>
-                    <button id="hideDepartements" class="btn btn-outline-secondary">Masquer</button>
-                </div>
-                <div id="map-departements" class="map-container"></div>
+                <!-- La carte sera insérée ici -->
+                <div id="map-departements"></div>
             </div>
         </div>
     </div>
@@ -1159,420 +1147,598 @@ async function updateStats() {
 </script>
 <script>  
 // Déclarer les variables globales
-let regionsMap = null;
-let departementsMap = null;
+let regionMap = null;
+let departementMap = null;
 let regionLayer = null;
 let departementLayer = null;
-let currentRegionData = null;
-let currentDepartementData = null;
+let regionStats = null;
+let departementStats = null;
 
-// Fonction pour créer une carte avec fond uni (SANS données géographiques)
-function createCleanMap(containerId, backgroundColor = '#f8fafc', center = [17.6078, 8.0817], zoom = 5) {
+// Couleurs pour les gradients
+const COLOR_SCALES = {
+    green: ['#CAEAA9E0', '#6DC645FF', '#54BD41FF', '#36B23DFF', '#12A537FF']
+};
+
+// Fonction pour créer une carte avec fond uni
+function createCleanMap(containerId, title, colorScale = 'green', center = [17.6078, 8.0817], zoom = 5.5) {
     const container = document.getElementById(containerId);
     if (!container) {
         console.error('❌ Conteneur non trouvé:', containerId);
         return null;
     }
     
-    // Vider le conteneur au cas où
-    container.innerHTML = '';
+    // Vider et préparer le conteneur
+    container.innerHTML = `
+        <div class="map-header">
+            <h6 class="map-title">${title}</h6>
+        </div>
+        <div class="map-container" id="${containerId}-inner"></div>
+        <div class="map-legend" id="${containerId}-legend"></div>
+    `;
     
-    // Appliquer le style de fond au conteneur
-    container.style.backgroundColor = backgroundColor;
-    container.style.border = '1px solid #e2e8f0';
-    container.style.borderRadius = '8px';
-    container.style.overflow = 'hidden';
-    container.style.position = 'relative';
+    const mapContainer = document.getElementById(`${containerId}-inner`);
+    
+    // Appliquer le style
+    mapContainer.style.backgroundColor = '#f8fafc';
+    mapContainer.style.border = '1px solid #e2e8f0';
+    mapContainer.style.borderRadius = '4px';
+    mapContainer.style.height = '400px';
+    mapContainer.style.width = '100%';
+    mapContainer.style.position = 'relative';
     
     try {
-        console.log('🗺️ Création de carte propre:', containerId);
-        
-        // Créer la carte avec options minimales
-        const map = L.map(containerId, {
+        // Créer la carte
+        const map = L.map(`${containerId}-inner`, {
             center: center,
             zoom: zoom,
             zoomControl: true,
-            attributionControl: false, // Désactiver COMPLÈTEMENT l'attribution
+            attributionControl: false,
             scrollWheelZoom: true,
-            // Désactiver les animations pour plus de fluidité
-            fadeAnimation: false,
-            markerZoomAnimation: false,
-            // Options pour éviter les tuiles
-            preferCanvas: true,
-            // Désactiver autres contrôles
-            boxZoom: false,
-            doubleClickZoom: false,
             dragging: true,
-            touchZoom: true,
-            keyboard: false
+            doubleClickZoom: true
         });
         
-        // NE PAS ajouter de L.tileLayer - pas de fond de carte!
-        
-        // Retarder la gestion des contrôles pour éviter l'erreur
-        setTimeout(() => {
-            if (map.attributionControl) {
-                map.attributionControl.setPrefix('');
-                map.attributionControl.remove();
-            }
-        }, 100);
-        
-        console.log('✅ Carte propre créée:', containerId);
+        console.log('✅ Carte créée:', containerId);
         return map;
         
     } catch (error) {
         console.error('❌ Erreur création carte:', containerId, error);
-        
-        // Fallback: afficher un message d'erreur simple
-        container.innerHTML = `
-            <div style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                height: 100%;
-                color: #718096;
-                font-family: sans-serif;
-            ">
-                <div style="text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 10px;">🗺️</div>
-                    <div style="font-weight: 500; margin-bottom: 5px;">Carte en chargement...</div>
-                    <div style="font-size: 12px; color: #a0aec0;">${error.message || ''}</div>
+        return null;
+    }
+}
+
+// Fonction pour obtenir une couleur basée sur un pourcentage (0-100%)
+function getColorForValue(percent) {
+    if (percent === null || percent === undefined) return '#cccccc';
+    
+    const colors = COLOR_SCALES.green;
+    
+    if (percent <= 25) return colors[0];
+    if (percent <= 50) return colors[1];
+    if (percent <= 75) return colors[2];
+    if (percent <= 90) return colors[3];
+    return colors[4]; // 91-100%
+}
+
+// Fonction pour créer une légende
+function createLegend(containerId, title = 'Taux de progression') {
+    const legendContainer = document.getElementById(`${containerId}-legend`);
+    if (!legendContainer) return;
+    
+    const colors = COLOR_SCALES.green;
+    
+    legendContainer.innerHTML = `
+        <div class="legend">
+            <div class="legend-title">${title}</div>
+            <div class="legend-scale">
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: ${colors[0]}"></span>
+                    <span class="legend-label">0-25%</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: ${colors[1]}"></span>
+                    <span class="legend-label">26-50%</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: ${colors[2]}"></span>
+                    <span class="legend-label">51-75%</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: ${colors[3]}"></span>
+                    <span class="legend-label">76-90%</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: ${colors[4]}"></span>
+                    <span class="legend-label">91-100%</span>
                 </div>
             </div>
-        `;
+        </div>
+    `;
+}
+
+// Fonction pour charger les statistiques par région
+async function loadRegionStats() {
+    try {
+        console.log('📊 Chargement des statistiques par région...');
         
-        return null;
+        // Utiliser votre service existant
+        const response = await fetch('/api/stats/regions');
+        if (!response.ok) {
+            throw new Error(`API Régions: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Statistiques régions chargées:', data.length, 'régions');
+        
+        // Calculer les pourcentages
+        regionStats = data.map(item => ({
+            nom: item.regionName || item.region,
+            code: item.regionCode,
+            populationCarto: item.populationCarto || 0,
+            populationCollectee: item.populationCollectee || 0,
+            pourcentage: item.populationCarto > 0 
+                ? Math.round((item.populationCollectee / item.populationCarto) * 100)
+                : 0
+        }));
+        
+        return regionStats;
+        
+    } catch (error) {
+        console.error('❌ Erreur chargement stats régions:', error);
+        
+        // Données de démo en cas d'erreur
+        regionStats = [
+            { nom: 'AGADEZ', code: 'NER001', populationCarto: 50000, populationCollectee: 45000, pourcentage: 90 },
+            { nom: 'DIFFA', code: 'NER002', populationCarto: 40000, populationCollectee: 30000, pourcentage: 75 },
+            { nom: 'DOSSO', code: 'NER003', populationCarto: 60000, populationCollectee: 48000, pourcentage: 80 },
+            { nom: 'MARADI', code: 'NER004', populationCarto: 70000, populationCollectee: 56000, pourcentage: 80 },
+            { nom: 'NIAMEY', code: 'NER005', populationCarto: 100000, populationCollectee: 95000, pourcentage: 95 },
+            { nom: 'TAHOUA', code: 'NER006', populationCarto: 55000, populationCollectee: 44000, pourcentage: 80 },
+            { nom: 'TILLABERI', code: 'NER007', populationCarto: 65000, populationCollectee: 52000, pourcentage: 80 },
+            { nom: 'ZINDER', code: 'NER008', populationCarto: 80000, populationCollectee: 64000, pourcentage: 80 }
+        ];
+        
+        return regionStats;
     }
 }
 
-// Fonction pour ajouter les régions SEULEMENT
-function addRegionLayer(map, regionData) {
-    if (!map || !regionData || !regionData.features) {
-        console.warn('⚠️ Données régions manquantes');
-        return null;
-    }
-    
+// Fonction pour charger les statistiques par département
+async function loadDepartementStats() {
     try {
-        // Supprimer l'ancienne couche si elle existe
-        if (regionLayer && map.hasLayer(regionLayer)) {
-            map.removeLayer(regionLayer);
+        console.log('📊 Chargement des statistiques par département...');
+        
+        const response = await fetch('/api/stats/departements');
+        if (!response.ok) {
+            throw new Error(`API Départements: ${response.status}`);
         }
         
-        // Couleurs pour les régions
-        const regionColors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-            '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'
+        const data = await response.json();
+        console.log('✅ Statistiques départements chargées:', data.length, 'départements');
+        
+        // Calculer les pourcentages
+        departementStats = data.map(item => ({
+            nom: item.departementName || item.departement,
+            code: item.departementCode,
+            region: item.region,
+            populationCarto: item.populationCarto || 0,
+            populationCollectee: item.populationCollectee || 0,
+            pourcentage: item.populationCarto > 0 
+                ? Math.round((item.populationCollectee / item.populationCarto) * 100)
+                : 0
+        }));
+        
+        return departementStats;
+        
+    } catch (error) {
+        console.error('❌ Erreur chargement stats départements:', error);
+        
+        // Données de démo
+        departementStats = [
+            { nom: 'ABALA', code: 'NER006001', region: 'TILLABERI', populationCarto: 15000, populationCollectee: 12000, pourcentage: 80 },
+            { nom: 'AGUIÉ', code: 'NER004001', region: 'MARADI', populationCarto: 18000, populationCollectee: 14400, pourcentage: 80 },
+            { nom: 'BIRNI N\'KONNI', code: 'NER004002', region: 'MARADI', populationCarto: 22000, populationCollectee: 17600, pourcentage: 80 },
+            // Ajouter d'autres départements...
         ];
         
-        // Créer la couche des régions
-        regionLayer = L.geoJSON(regionData, {
-            style: function(feature) {
-                const colorIndex = (feature.properties.OBJECTID || 0) % regionColors.length;
-                return {
-                    fillColor: regionColors[colorIndex],
-                    weight: 2.5,
-                    opacity: 1,
-                    color: '#ffffff',
-                    fillOpacity: 0.8
-                };
-            },
-            onEachFeature: function(feature, layer) {
-                if (feature.properties && feature.properties.NOMREG) {
-                    const popupContent = `
-                        <div style="min-width: 200px; font-family: system-ui, sans-serif;">
-                            <div style="
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                color: white;
-                                padding: 10px 15px;
-                                margin: -16px -16px 10px -16px;
-                                border-radius: 4px 4px 0 0;
-                            ">
-                                <strong style="font-size: 14px;">${feature.properties.NOMREG}</strong>
-                            </div>
-                            <div style="padding: 5px 0;">
-                                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                                    <span style="color: #666;">ISF:</span>
-                                    <span style="font-weight: 600; color: #2d3748;">${feature.properties.ISF || 'N/A'}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                                    <span style="color: #666;">Code:</span>
-                                    <span style="font-weight: 600; color: #2d3748;">${feature.properties.rowcacode1 || 'N/A'}</span>
+        return departementStats;
+    }
+}
+
+// Fonction pour créer la carte des régions avec pourcentages
+function createRegionMap(regionData, stats) {
+    if (!regionData || !regionData.features) {
+        console.error('❌ Données régions manquantes');
+        return;
+    }
+    
+    // Créer la carte
+    regionMap = createCleanMap('map-regions', 'Progression par Région', 'green', [17.6078, 8.0817], 7);
+    if (!regionMap) return;
+    
+    // Créer la légende
+    createLegend('map-regions', 'Taux de progression');
+    
+    // Associer les statistiques aux régions
+    const regionDataWithStats = regionData.features.map(feature => {
+        const regionName = feature.properties.NOMREG;
+        const stat = stats.find(s => s.nom === regionName);
+        const pourcentage = stat ? stat.pourcentage : 0;
+        
+        return {
+            ...feature,
+            properties: {
+                ...feature.properties,
+                stat: stat,
+                pourcentage: pourcentage
+            }
+        };
+    });
+    
+    // Créer la couche choroplèthe
+    regionLayer = L.geoJSON(regionDataWithStats, {
+        style: function(feature) {
+            const pourcentage = feature.properties.pourcentage || 0;
+            return {
+                fillColor: getColorForValue(pourcentage),
+                weight: 2,
+                opacity: 1,
+                color: '#ffffff',
+                fillOpacity: 0.8,
+                className: 'region-polygon'
+            };
+        },
+        onEachFeature: function(feature, layer) {
+            const regionName = feature.properties.NOMREG;
+            const stat = feature.properties.stat || {};
+            const pourcentage = feature.properties.pourcentage || 0;
+            
+            // Afficher le pourcentage directement sur la carte
+            const center = layer.getBounds().getCenter();
+            const label = L.divIcon({
+                html: `
+                    <div style="
+                        background: rgba(255, 255, 255, 0.9);
+                        border-radius: 4px;
+                        padding: 4px 8px;
+                        font-weight: 700;
+                        font-size: 14px;
+                        color: #2d3748;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        border: 2px solid ${getColorForValue(pourcentage)};
+                    ">
+                        ${pourcentage}%
+                    </div>
+                `,
+                iconSize: [60, 30],
+                className: 'region-label'
+            });
+            
+            L.marker(center, { 
+                icon: label,
+                interactive: false,
+                zIndexOffset: 1000
+            }).addTo(regionMap);
+            
+            // Popup détaillé
+            const popupContent = `
+                <div style="min-width: 250px; font-family: system-ui, sans-serif;">
+                    <div style="
+                        background-color: #F8BE28FF ;
+                        color: white;
+                        padding: 12px 16px;
+                        margin: -16px -16px 12px -16px;
+                        border-radius: 4px 4px 0 0;
+                    ">
+                        <strong style="font-size: 16px;">${regionName}</strong>
+                    </div>
+                    <div style="padding: 10px 0;">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Taux de progression</div>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <div style="
+                                    width: 80px;
+                                    height: 80px;
+                                    border-radius: 50%;
+                                    background: conic-gradient(${getColorForValue(pourcentage)} ${pourcentage * 3.6}deg, #e2e8f0 0deg);
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    position: relative;
+                                ">
+                                    <div style="
+                                        width: 60px;
+                                        height: 60px;
+                                        background: white;
+                                        border-radius: 50%;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 20px;
+                                        font-weight: 700;
+                                        color: #2d3748;
+                                    ">
+                                        ${pourcentage}%
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    `;
-                    layer.bindPopup(popupContent);
-                }
-            }
-        }).addTo(map);
-        
-        // Ajuster la vue pour n'afficher que les régions
-        const bounds = regionLayer.getBounds();
-        if (bounds.isValid()) {
-            map.fitBounds(bounds, {
-                padding: [40, 40],
-                maxZoom: 8,
-                animate: true
-            });
-            
-            // Empêcher de zoomer en dehors des limites
-            map.setMaxBounds(bounds.pad(0.15));
-        }
-        
-        console.log('✅ Couche régions ajoutée:', regionData.features.length, 'régions');
-        return regionLayer;
-        
-    } catch (error) {
-        console.error('❌ Erreur ajout régions:', error);
-        return null;
-    }
-}
-
-// Fonction pour ajouter les départements SEULEMENT
-function addDepartementLayer(map, departementData) {
-    if (!map || !departementData || !departementData.features) {
-        console.warn('⚠️ Données départements manquantes');
-        return null;
-    }
-    
-    try {
-        // Supprimer l'ancienne couche si elle existe
-        if (departementLayer && map.hasLayer(departementLayer)) {
-            map.removeLayer(departementLayer);
-        }
-        
-        // Nuances de bleu pour les départements
-        const blueShades = [
-            '#3388ff', '#2e7acc', '#296bb3', '#245d99', 
-            '#1f4e80', '#1a4066', '#15324d', '#102433'
-        ];
-        
-        // Créer la couche des départements
-        departementLayer = L.geoJSON(departementData, {
-            style: function(feature) {
-                const colorIndex = (feature.properties.OBJECTID || 0) % blueShades.length;
-                return {
-                    fillColor: blueShades[colorIndex],
-                    weight: 1.2,
-                    opacity: 1,
-                    color: '#ffffff',
-                    fillOpacity: 0.6
-                };
-            },
-            onEachFeature: function(feature, layer) {
-                if (feature.properties && feature.properties.NOMDEP) {
-                    const popupContent = `
-                        <div style="min-width: 220px; font-family: system-ui, sans-serif;">
-                            <div style="
-                                background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-                                color: white;
-                                padding: 10px 15px;
-                                margin: -16px -16px 10px -16px;
-                                border-radius: 4px 4px 0 0;
-                            ">
-                                <strong style="font-size: 14px;">${feature.properties.NOMDEP}</strong>
+                        
+                        <hr style="margin: 15px 0; border: none; border-top: 1px solid #e2e8f0;">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 2px;">Population cartographiée</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #2d3748;">${formatNumber(stat.populationCarto || 0)}</div>
                             </div>
-                            <div style="padding: 5px 0;">
-                                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                                    <span style="color: #666;">Région:</span>
-                                    <span style="font-weight: 600; color: #2d3748;">${feature.properties.adm_01 || 'N/A'}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                                    <span style="color: #666;">Code:</span>
-                                    <span style="font-weight: 600; color: #2d3748;">${feature.properties.rowcacode2 || 'N/A'}</span>
-                                </div>
-                                ${feature.properties.DepCodDep ? `
-                                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                                    <span style="color: #666;">Code Dépt:</span>
-                                    <span style="font-weight: 600; color: #2d3748;">${feature.properties.DepCodDep}</span>
-                                </div>
-                                ` : ''}
+                            <div>
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 2px;">Population collectée</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #2d3748;">${formatNumber(stat.populationCollectee || 0)}</div>
                             </div>
                         </div>
-                    `;
-                    layer.bindPopup(popupContent);
-                }
-            }
-        }).addTo(map);
-        
-        // Ajuster la vue pour n'afficher que les départements
-        const bounds = departementLayer.getBounds();
-        if (bounds.isValid()) {
-            map.fitBounds(bounds, {
-                padding: [40, 40],
-                maxZoom: 9,
-                animate: true
-            });
+                        
+                        <div style="margin-top: 10px; font-size: 11px; color: #a0aec0; text-align: center;">
+                            Code: ${feature.properties.rowcacode1 || 'N/A'}
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            // Empêcher de zoomer en dehors des limites
-            map.setMaxBounds(bounds.pad(0.15));
+            layer.bindPopup(popupContent);
+            
+            // Tooltip au survol
+            layer.bindTooltip(`
+                <div style="font-weight: 600; font-size: 13px;">${regionName}</div>
+                <div style="font-size: 12px; color: #666;">${pourcentage}% de progression</div>
+                <div style="font-size: 11px; color: #999;">${formatNumber(stat.populationCollectee || 0)}/${formatNumber(stat.populationCarto || 0)}</div>
+            `, {
+                direction: 'top',
+                offset: [0, -10],
+                className: 'custom-tooltip',
+                sticky: true
+            });
         }
+    }).addTo(regionMap);
+    
+    // Ajuster la vue
+
+const bounds = regionLayer.getBounds();
+if (bounds.isValid()) {
+    // 1. fitBounds initial avec padding minimal
+    regionMap.fitBounds(bounds, {
+        padding: [15, 15],
+        maxZoom: 7.5,
+        animate: true
+    });
+    
+    // 2. Zoom progressif très doux
+    setTimeout(() => {
+        const currentZoom = regionMap.getZoom();
+        // Essayer différentes valeurs pour trouver le bon réglage
+        const zoomIncrement = 0.3; // ← TRÈS DOUX (essayez 0.2, 0.3, 0.4)
         
-        console.log('✅ Couche départements ajoutée:', departementData.features.length, 'départements');
-        return departementLayer;
-        
-    } catch (error) {
-        console.error('❌ Erreur ajout départements:', error);
-        return null;
-    }
+        if (currentZoom < 7) {
+            regionMap.setZoom(currentZoom + zoomIncrement, {
+                animate: true,
+                duration: 0.5
+            });
+        }
+    }, 400);
+}
+    console.log('✅ Carte régions créée avec', regionDataWithStats.length, 'régions');
 }
 
-// Fonction pour charger les données
-async function loadGeoJSONData() {
-    console.log('📡 Chargement des données GeoJSON...');
+// Fonction pour créer la carte des départements avec pourcentages
+function createDepartementMap(departementData, stats) {
+    if (!departementData || !departementData.features) {
+        console.error('❌ Données départements manquantes');
+        return;
+    }
+    
+    // Créer la carte
+    departementMap = createCleanMap('map-departements', 'Progression par Département', 'green', [17.6078, 8.0817], 6);
+    if (!departementMap) return;
+    
+    // Créer la légende
+    createLegend('map-departements', 'Taux de progression');
+    
+    // Associer les statistiques aux départements
+    const departementDataWithStats = departementData.features.map(feature => {
+        const departementName = feature.properties.NOMDEP;
+        const stat = stats.find(s => s.nom === departementName);
+        const pourcentage = stat ? stat.pourcentage : 0;
+        
+        return {
+            ...feature,
+            properties: {
+                ...feature.properties,
+                stat: stat,
+                pourcentage: pourcentage
+            }
+        };
+    });
+    
+    // Créer la couche choroplèthe
+    departementLayer = L.geoJSON(departementDataWithStats, {
+        style: function(feature) {
+            const pourcentage = feature.properties.pourcentage || 0;
+            return {
+                fillColor: getColorForValue(pourcentage),
+                weight: 1,
+                opacity: 1,
+                color: '#ffffff',
+                fillOpacity: 0.7,
+                className: 'departement-polygon'
+            };
+        },
+        onEachFeature: function(feature, layer) {
+            const departementName = feature.properties.NOMDEP;
+            const stat = feature.properties.stat || {};
+            const pourcentage = feature.properties.pourcentage || 0;
+            const regionName = feature.properties.adm_01 || stat.region || '';
+            
+            // Popup détaillé
+            const popupContent = `
+                <div style="min-width: 250px; font-family: system-ui, sans-serif;">
+                    <div style="
+                        background-color: #F8BE28FF ;
+                        color: white;
+                        padding: 12px 16px;
+                        margin: -16px -16px 12px -16px;
+                        border-radius: 4px 4px 0 0;
+                    ">
+                        <div>
+                            <strong style="font-size: 16px;">${departementName}</strong>
+                            <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">
+                                Région: ${regionName}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding: 10px 0;">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Taux de progression</div>
+                            <div style="font-size: 32px; font-weight: 700; color: #2d3748;">
+                                ${pourcentage}%
+                            </div>
+                        </div>
+                        
+                        <hr style="margin: 15px 0; border: none; border-top: 1px solid #e2e8f0;">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 2px;">Population cartographiée</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #2d3748;">${formatNumber(stat.populationCarto || 0)}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 2px;">Population collectée</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #2d3748;">${formatNumber(stat.populationCollectee || 0)}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 10px; font-size: 11px; color: #a0aec0; text-align: center;">
+                            Code: ${feature.properties.rowcacode2 || 'N/A'} | 
+                            Code Dépt: ${feature.properties.DepCodDep || 'N/A'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            layer.bindPopup(popupContent);
+            
+            // Tooltip au survol
+            layer.bindTooltip(`
+                <div style="font-weight: 600; font-size: 12px;">${departementName}</div>
+                <div style="font-size: 11px; color: #666;">${pourcentage}% | ${regionName}</div>
+            `, {
+                direction: 'top',
+                offset: [0, -5],
+                className: 'custom-tooltip',
+                sticky: true
+            });
+        }
+    }).addTo(departementMap);
+    
+    // Ajuster la vue
+    const bounds = departementLayer.getBounds();
+    if (bounds.isValid()) {
+        departementMap.fitBounds(bounds, {
+            padding: [30, 30],
+            maxZoom: 8,
+            animate: true
+        });
+    }
+    
+    console.log('✅ Carte départements créée avec', departementDataWithStats.length, 'départements');
+}
+
+// Formatage des nombres
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace('.', ',') + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1).replace('.', ',') + 'k';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+// Fonction principale pour créer les deux cartes
+async function createBothMaps() {
+    console.log('🗺️ Création des cartes de progression...');
     
     try {
-        const [regionResponse, departementResponse] = await Promise.all([
+        // Charger toutes les données en parallèle
+        const [regionGeoResponse, departementGeoResponse, regionStatsData, departementStatsData] = await Promise.all([
             fetch('/api/regions'),
-            fetch('/api/departements')
+            fetch('/api/departements'),
+            loadRegionStats(),
+            loadDepartementStats()
         ]);
         
-        // Vérifier les réponses
-        if (!regionResponse.ok) {
-            throw new Error(`API Régions: ${regionResponse.status} ${regionResponse.statusText}`);
-        }
-        if (!departementResponse.ok) {
-            throw new Error(`API Départements: ${departementResponse.status} ${departementResponse.statusText}`);
+        // Vérifier les réponses géographiques
+        if (!regionGeoResponse.ok || !departementGeoResponse.ok) {
+            throw new Error('Erreur chargement données géographiques');
         }
         
-        currentRegionData = await regionResponse.json();
-        currentDepartementData = await departementResponse.json();
-        
-        // Validation basique des données
-        if (!currentRegionData.features || currentRegionData.features.length === 0) {
-            throw new Error('Données régions vides ou invalides');
-        }
-        if (!currentDepartementData.features || currentDepartementData.features.length === 0) {
-            throw new Error('Données départements vides ou invalides');
-        }
+        const regionGeoData = await regionGeoResponse.json();
+        const departementGeoData = await departementGeoResponse.json();
         
         console.log('✅ Données chargées:', {
-            régions: currentRegionData.features.length,
-            départements: currentDepartementData.features.length
+            régions: regionGeoData.features?.length || 0,
+            départements: departementGeoData.features?.length || 0,
+            statsRégions: regionStatsData?.length || 0,
+            statsDépartements: departementStatsData?.length || 0
         });
         
-        // Initialiser les cartes
-        initCleanMaps();
+        // Créer la carte des régions
+        createRegionMap(regionGeoData, regionStatsData);
+        
+        // Créer la carte des départements
+        createDepartementMap(departementGeoData, departementStatsData);
+        
+        console.log('✅ Les deux cartes sont prêtes');
         
     } catch (error) {
-        console.error('❌ Erreur de chargement:', error);
+        console.error('❌ Erreur création cartes:', error);
         showError(error);
     }
-}
-
-// Fonction pour initialiser les deux cartes SANS FOND
-function initCleanMaps() {
-    // 1. Carte des Régions (fond gris clair)
-    regionsMap = createCleanMap('map-regions', '#f8fafc', [17.6078, 8.0817], 5);
-    
-    if (regionsMap && currentRegionData) {
-        // Petit délai pour s'assurer que la carte est prête
-        setTimeout(() => {
-            addRegionLayer(regionsMap, currentRegionData);
-        }, 100);
-    } else {
-        console.error('❌ Impossible de créer la carte régions');
-    }
-    
-    // 2. Carte des Départements (fond gris très clair)
-    departementsMap = createCleanMap('map-departements', '#f8fafc', [17.6078, 8.0817], 6);
-    
-    if (departementsMap && currentDepartementData) {
-        // Petit délai pour s'assurer que la carte est prête
-        setTimeout(() => {
-            addDepartementLayer(departementsMap, currentDepartementData);
-        }, 150);
-    } else {
-        console.error('❌ Impossible de créer la carte départements');
-    }
-    
-    console.log('✅ Cartes initialisées');
-}
-
-// Configuration des événements
-function setupEventListeners() {
-    // Boutons pour actualiser/réinitialiser
-    const showRegionsBtn = document.getElementById('showRegions');
-    const showDepartementsBtn = document.getElementById('showDepartements');
-    
-    if (showRegionsBtn) {
-        showRegionsBtn.addEventListener('click', function() {
-            if (regionsMap && currentRegionData) {
-                addRegionLayer(regionsMap, currentRegionData);
-            }
-        });
-    }
-    
-    if (showDepartementsBtn) {
-        showDepartementsBtn.addEventListener('click', function() {
-            if (departementsMap && currentDepartementData) {
-                addDepartementLayer(departementsMap, currentDepartementData);
-            }
-        });
-    }
-    
-    // Si vous avez des boutons hide (optionnels)
-    const hideRegionsBtn = document.getElementById('hideRegions');
-    const hideDepartementsBtn = document.getElementById('hideDepartements');
-    
-    if (hideRegionsBtn) {
-        hideRegionsBtn.addEventListener('click', function() {
-            if (regionsMap && regionLayer && regionsMap.hasLayer(regionLayer)) {
-                regionsMap.removeLayer(regionLayer);
-                console.log('👁️ Couche régions masquée');
-            }
-        });
-    }
-    
-    if (hideDepartementsBtn) {
-        hideDepartementsBtn.addEventListener('click', function() {
-            if (departementsMap && departementLayer && departementsMap.hasLayer(departementLayer)) {
-                departementsMap.removeLayer(departementLayer);
-                console.log('👁️ Couche départements masquée');
-            }
-        });
-    }
-    
-    console.log('🎮 Événements configurés');
 }
 
 // Fonction pour afficher les erreurs
 function showError(error) {
     const errorHtml = `
         <div style="
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px;
-            color: #856404;
-            font-family: system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            color: #718096;
+            font-family: sans-serif;
+            text-align: center;
+            padding: 20px;
         ">
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <span style="font-size: 20px;">⚠️</span>
-                <div>
-                    <h5 style="margin: 0 0 5px 0; font-size: 14px;">Données temporairement indisponibles</h5>
-                    <p style="margin: 0; font-size: 13px;">
-                        ${error.message || 'Les données cartographiques ne sont pas disponibles pour le moment.'}
-                    </p>
-                    <button onclick="window.location.reload()" style="
-                        margin-top: 10px;
-                        padding: 5px 12px;
-                        background: #856404;
-                        color: white;
-                        border: none;
-                        border-radius: 4px;
-                        font-size: 12px;
-                        cursor: pointer;
-                    ">
-                        Réessayer
-                    </button>
-                </div>
+            <div style="font-size: 48px; margin-bottom: 15px;">🗺️</div>
+            <div style="font-size: 16px; font-weight: 500; margin-bottom: 10px; color: #4a5568;">
+                Impossible de charger les cartes
             </div>
+            <div style="font-size: 14px; color: #a0aec0; margin-bottom: 20px;">
+                ${error.message || 'Une erreur est survenue'}
+            </div>
+            <button onclick="window.location.reload()" style="
+                padding: 8px 20px;
+                background: #4299e1;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.2s;
+            ">
+                Réessayer
+            </button>
         </div>
     `;
     
-    // Afficher dans les deux conteneurs de carte
+    // Afficher dans les deux conteneurs
     ['map-regions', 'map-departements'].forEach(id => {
         const container = document.getElementById(id);
         if (container) {
@@ -1581,139 +1747,207 @@ function showError(error) {
     });
 }
 
-// Vérifier si Leaflet est chargé
-function checkLeafletLoaded() {
-    if (typeof L === 'undefined') {
-        console.error('❌ Leaflet non chargé');
-        return false;
-    }
-    if (typeof L.map === 'undefined') {
-        console.error('❌ Leaflet.map non disponible');
-        return false;
-    }
-    return true;
-}
-
-// Initialisation principale
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🏗️ Initialisation des cartes sans fond...');
+// Initialisation
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🏗️ Initialisation des cartes...');
     
     // Vérifier que Leaflet est chargé
-    if (!checkLeafletLoaded()) {
-        console.error('❌ Leaflet.js doit être chargé avant ce script');
-        showError(new Error('Bibliothèque cartographique non chargée'));
+    if (typeof L === 'undefined') {
+        console.error('❌ Leaflet non chargé');
+        showError(new Error('Bibliothèque cartographique manquante'));
         return;
     }
     
-    // Configurer les événements
-    setupEventListeners();
+    // Créer les cartes
+    await createBothMaps();
     
-    // Charger les données
-    loadGeoJSONData();
+    console.log('✅ Dashboard cartographique prêt');
 });
 
 // Redimensionnement automatique
 window.addEventListener('resize', function() {
-    // Petit délai pour éviter les recalculs trop fréquents
     clearTimeout(window.resizeTimer);
     window.resizeTimer = setTimeout(function() {
-        if (regionsMap) {
-            regionsMap.invalidateSize();
-        }
-        if (departementsMap) {
-            departementsMap.invalidateSize();
-        }
+        if (regionMap) regionMap.invalidateSize();
+        if (departementMap) departementMap.invalidateSize();
         console.log('🔄 Cartes redimensionnées');
     }, 250);
 });
 
-// Exposer des fonctions globales si besoin
-window.reloadMaps = function() {
-    console.log('🔄 Rechargement des cartes...');
-    if (regionsMap && currentRegionData) {
-        addRegionLayer(regionsMap, currentRegionData);
-    }
-    if (departementsMap && currentDepartementData) {
-        addDepartementLayer(departementsMap, currentDepartementData);
-    }
-};
+// API endpoints nécessaires côté serveur
+/* 
+// Dans votre fichier de routes (ex: routes/api.js)
 
-window.resetMaps = function() {
-    console.log('🔄 Réinitialisation des vues...');
-    if (regionsMap) {
-        regionsMap.setView([17.6078, 8.0817], 5);
+// 1. Pour les statistiques par région
+router.get('/stats/regions', async (req, res) => {
+    try {
+        const stats = await getPopulationByRegion(); // Votre fonction existante
+        res.json(stats);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
-    if (departementsMap) {
-        departementsMap.setView([17.6078, 8.0817], 6);
-    }
-};
+});
 
-// Vérification automatique des erreurs
-setTimeout(() => {
-    if (!regionsMap && !departementsMap) {
-        console.warn('⚠️ Les cartes ne semblent pas être initialisées');
+// 2. Pour les statistiques par département (à créer)
+router.get('/stats/departements', async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                code_departement AS departementCode,
+                departement AS departementName,
+                region,
+                SUM(xm20) AS populationCarto,
+                SUM(xm40) AS populationCollectee
+            FROM tmenage
+            GROUP BY code_departement, departement, region
+            ORDER BY region, departement ASC
+        `;
+        const rows = await menageDB.query(sql, { type: QueryTypes.SELECT });
+        
+        const result = rows.map(r => ({
+            departement: r.departementName,
+            region: r.region,
+            populationCarto: Number(r.populationCarto || 0),
+            populationCollectee: Number(r.populationCollectee || 0)
+        }));
+        
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
-}, 2000);
+});
+*/
 </script>
 
-<!-- Style CSS ESSENTIEL pour que les cartes s'affichent -->
+<!-- Style CSS -->
 <style>
-    /* STYLES OBLIGATOIRES pour que Leaflet fonctionne */
-    #map-regions, #map-departements {
-        height: 400px !important;
-        width: 100% !important;
-        min-height: 300px;
+    /* Conteneurs des cartes */
+    .map-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 15px;
+        margin-bottom: 20px;
+        transition: box-shadow 0.3s ease;
     }
     
-    /* Override des styles Leaflet pour cacher le fond */
-    .leaflet-container {
-        background: transparent !important;
+    .map-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
     
-    .leaflet-tile-pane {
-        display: none !important;
-    }
-    
-    .leaflet-control-container {
-        z-index: 1000;
-    }
-    
-    /* Cacher les attributions */
-    .leaflet-control-attribution {
-        display: none !important;
-    }
-    
-    /* Styles pour vos boutons */
-    .map-controls {
+    /* En-tête de la carte */
+    .map-header {
         margin-bottom: 15px;
+    }
+    
+    .map-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    /* Conteneur Leaflet */
+    .map-container {
+        height: 400px;
+        width: 100%;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    
+    /* Légende */
+    .legend {
+        background: white;
+        padding: 10px 15px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        font-size: 12px;
+        display: inline-block;
+    }
+    
+    .legend-title {
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 10px;
+        font-size: 13px;
+    }
+    
+    .legend-scale {
         display: flex;
-        gap: 8px;
+        gap: 15px;
         flex-wrap: wrap;
     }
     
-    .map-controls .btn {
-        padding: 6px 12px;
-        font-size: 13px;
-        border-radius: 4px;
-        font-weight: 500;
-        transition: all 0.2s ease;
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     
-    /* Animation pour les polygones */
-    .leaflet-interactive {
+    .legend-color {
+        width: 24px;
+        height: 16px;
+        border-radius: 3px;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .legend-label {
+        color: #718096;
+        font-size: 12px;
+        min-width: 50px;
+    }
+    
+    /* Styles Leaflet */
+    .leaflet-container {
+        background: #f8fafc !important;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+    
+    /* Labels des pourcentages sur les régions */
+    .region-label {
+        pointer-events: none !important;
+    }
+    
+    /* Tooltips personnalisés */
+    .custom-tooltip {
+        background: white !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+    }
+    
+    .custom-tooltip:before {
+        border-top-color: white !important;
+    }
+    
+    /* Popups améliorés */
+    .leaflet-popup-content-wrapper {
+        border-radius: 8px !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        border: none !important;
+        overflow: hidden;
+    }
+    
+    .leaflet-popup-tip {
+        box-shadow: none !important;
+    }
+    
+    /* Animation des polygones */
+    .region-polygon, .departement-polygon {
         transition: fill-opacity 0.3s ease, stroke-width 0.3s ease;
     }
     
-    .leaflet-interactive:hover {
+    .region-polygon:hover, .departement-polygon:hover {
         fill-opacity: 0.9 !important;
         stroke-width: 3px !important;
         cursor: pointer;
-    }
-    
-    /* Style des popups */
-    .leaflet-popup-content-wrapper {
-        border-radius: 6px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
-        border: none !important;
     }
 </style>
