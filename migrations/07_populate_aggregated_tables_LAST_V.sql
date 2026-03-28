@@ -53,7 +53,7 @@ SELECT '📊 fin insertion des donnees dans tlevel1...' AS status;
         -- Correction : On compte les ménages distincts présents dans les deux tables
         menages_avec_emigres = (
             SELECT COUNT(*) 
-            FROM tmenage e where e.em00=1
+            FROM tmenage e where e.em00=1 and meta_intro=1
         ),
         
         date_maj = NOW()
@@ -359,7 +359,7 @@ FROM
         SELECT m.code_commune, 
                COALESCE(sum(m.em01), 0) as total_emigres,
                COUNT(*) as menages_avec_emigres 
-        FROM tmenage m 
+        FROM tmenage m where m.em00=1
         GROUP BY m.code_commune
     ) E ON H.code_commune = E.code_commune
     -- 5. Jointure avec enumeration
@@ -474,7 +474,7 @@ FROM
         SELECT m.mo_zd, 
                 COALESCE(sum(m.em01), 0) as total_emigres,
                COUNT(*) as menages_avec_emigres
-        FROM tmenage m
+        FROM tmenage m where m.em00=1
         GROUP BY m.mo_zd
     ) E ON H.mo_zd = E.mo_zd
      -- 6. Jointure avec enumeration
