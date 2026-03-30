@@ -101,3 +101,30 @@ exports.getZds = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// GET /agents-by-zd?zd=XXXX
+// Retourne { agents: "agent1 - agent2 - ..." } pour la ZD donnée
+exports.getAgentsByZd = async (req, res) => {
+  try {
+    const zd = req.query.zd || '';
+    if (!zd) {
+      return res.json({ agents: '' });
+    }
+
+    const cacheKey = getCacheKey(`agents_zd:${zd}`, 'shared');
+    if (selectsCache[cacheKey]) {
+      console.log(`✅ Cache hit: ${cacheKey}`);
+      return res.json(selectsCache[cacheKey]);
+    }
+
+    const agents = await menageService.getAgentsByZd(zd);
+    const result = { agents };
+    selectsCache[cacheKey] = result;
+    setTimeout(() => delete selectsCache[cacheKey], 10 * 60 * 1000);
+
+    res.json(result);
+  } catch (err) {
+    console.error('❌ Erreur getAgentsByZd:', err);
+    res.status(500).json({ error: err.message });
+  }
+};

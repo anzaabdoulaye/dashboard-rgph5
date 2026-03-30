@@ -483,6 +483,30 @@ async function getZds(commune, user = null) {
   }, CACHE_TTL.SELECTS);
 }
 
+/**
+ * Récupère les agents (codes) associés à une ZD donnée
+ * via la table user_zd (mo_zd, agent).
+ * Retourne une chaîne "agent1 - agent2 - ..." ou '' si aucun agent.
+ */
+async function getAgentsByZd(zd) {
+  if (!zd) return '';
+  const cacheKey = `agents_zd:${zd}`;
+  return await cacheHelper.getOrSet(cacheKey, async () => {
+    const sql = `
+      SELECT agent
+      FROM user_zd
+      WHERE mo_zd = :zd
+      ORDER BY agent ASC
+    `;
+    const rows = await menageDB.query(sql, {
+      replacements: { zd },
+      type: QueryTypes.SELECT
+    });
+    if (!rows || rows.length === 0) return '';
+    return rows.map(r => r.agent).filter(Boolean).join(' - ');
+  }, CACHE_TTL.SELECTS);
+}
+
 /* Export  */
 module.exports = {
   getMainStats,
@@ -494,5 +518,6 @@ module.exports = {
   getRegions,
   getDepartements,
   getCommunes,
-  getZds
+  getZds,
+  getAgentsByZd
 };

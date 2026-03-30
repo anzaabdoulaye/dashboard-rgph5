@@ -16,4 +16,7 @@ router.get('/communes', requireAuth, locationController.getCommunes);
 // Récupérer les ZD d'une commune (avec restrictions)
 router.get('/zds', requireAuth, locationController.getZds);
 
+// Récupérer les agents associés à une ZD (depuis user_zd)
+router.get('/agents-by-zd', requireAuth, locationController.getAgentsByZd);
+
 module.exports = router;

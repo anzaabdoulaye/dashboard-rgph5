@@ -169,11 +169,19 @@ CREATE TABLE stats_par_zd (
     menages_avec_emigres INT DEFAULT 0,
     menages_non_existe INT DEFAULT 0,
     date_maj TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
     -- Index composite pour recherche rapide par ZD ou par Commune+ZD
     INDEX idx_zd (mo_zd),
     INDEX idx_geo_full (code_commune, mo_zd)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+DROP TABLE IF EXISTS user_zd;
+CREATE TABLE user_zd (
+  mo_zd varchar(15) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NOT NULL,
+  agent varchar(15) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci,
+  primary key(mo_zd, agent)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 -- =====================================================
