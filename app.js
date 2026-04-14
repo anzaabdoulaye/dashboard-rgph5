@@ -20,6 +20,7 @@ const lieuRouter = require('./routes/lieuRoutes');
 const { performanceMonitor, performanceMetrics } = require('./middleware/performanceMonitor');
 const apiRoutes = require('./routes/api');
 const mapAuthorization = require('./middleware/mapAuthorization');
+const exportRoutes = require('./routes/exportRoutes');
 
 var expressLayouts = require('express-ejs-layouts');
 
@@ -47,7 +48,7 @@ app.use(helmet({
 // 3. Rate limiting pour éviter les abus
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limite à 100 requêtes par IP
+  max:500, // Limite à 100 requêtes par IP
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -61,6 +62,11 @@ const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 100, // 30 requêtes par minute max
   message: 'Trop de requêtes API, veuillez ralentir.',
+});
+
+app.use((req, res, next) => {
+  res.locals.user = req.session?.user || req.user || null;
+  next();
 });
 
 app.use('/api/', apiLimiter);
@@ -142,6 +148,8 @@ app.use((req, res, next) => {
   res.locals.message = null;
   next();
 });
+
+app.use('/', exportRoutes);
 
 
 // catch 404 and forward to error handler
