@@ -1,0 +1,197 @@
+<div class="container-fluid py-4">
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h4 class="mb-1">Téléchargements de données</h4>
+      <p class="text-muted mb-4">Aperçu, sélection de colonnes, puis export.</p>
+
+      <form id="exportForm" class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Jeu de données</label>
+          <select name="dataset" id="dataset" class="form-select" required>
+            <option value="">-- Sélectionner --</option>
+            <% datasets.forEach(ds => { %>
+              <option value="<%= ds.key %>"><%= ds.label %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Format</label>
+          <select name="format" id="format" class="form-select">
+            <option value="csv">CSV</option>
+            <option value="excel">Excel</option>
+            <option value="json">JSON</option>
+          </select>
+        </div>
+
+        <div class="col-12">
+          <div class="border rounded p-3 bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong>Colonnes à exporter</strong>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllColumns">Tout cocher</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAllColumns">Tout décocher</button>
+              </div>
+            </div>
+
+            <div id="columnsBox" class="row g-2"></div>
+          </div>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+          <button type="button" class="btn btn-outline-primary" id="previewBtn">Aperçu</button>
+          <button type="submit" class="btn btn-primary">Télécharger</button>
+        </div>
+      </form>
+
+      <hr class="my-4">
+
+      <div id="previewWrapper" class="d-none">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="mb-0">Aperçu</h5>
+          <span class="text-muted">Lignes affichées : <span id="previewCount">0</span></span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle">
+            <thead id="previewHead"></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('previewBtn').addEventListener('click', async () => {
+    const form = document.getElementById('exportForm');
+    const params = new URLSearchParams(new FormData(form));
+
+    const response = await fetch(`/api/exports/preview?${params.toString()}`);
+    const data = await response.json();
+
+    if (!data.success) return;
+
+    document.getElementById('previewBox').classList.remove('d-none');
+    document.getElementById('previewCount').textContent = data.totalRows;
+
+    const head = document.getElementById('previewHead');
+    const body = document.getElementById('previewBody');
+
+    head.innerHTML = '';
+    body.innerHTML = '';
+
+    if (data.columns && data.columns.length) {
+      head.innerHTML = `<tr>${data.columns.map(c => `<th>${c}</th>`).join('')}</tr>`;
+    }
+
+    if (data.sample && data.sample.length) {
+      body.innerHTML = data.sample.map(row => {
+        return `<tr>${data.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}</tr>`;
+      }).join('');
+    }
+  });
+
+  document.getElementById('exportForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const params = new URLSearchParams(new FormData(this));
+    window.location.href = `/exports/download?${params.toString()}`;
+  });
+</script>
+<script>
+  const datasetSelect = document.getElementById('dataset');
+  const columnsBox = document.getElementById('columnsBox');
+  const previewBtn = document.getElementById('previewBtn');
+  const exportForm = document.getElementById('exportForm');
+
+  function renderColumns(columns, defaults = []) {
+    columnsBox.innerHTML = '';
+
+    columns.forEach((col) => {
+      const checked = defaults.includes(col) ? 'checked' : '';
+      columnsBox.innerHTML += `
+        <div class="col-md-3 col-sm-4 col-6">
+          <div class="form-check">
+            <input class="form-check-input export-column" type="checkbox" value="${col}" id="col_${CSS.escape(col)}" ${checked}>
+            <label class="form-check-label small" for="col_${CSS.escape(col)}">${col}</label>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  async function loadDatasetMeta(datasetKey) {
+    if (!datasetKey) {
+      columnsBox.innerHTML = '';
+      return;
+    }
+
+    const response = await fetch(`/api/exports/meta?dataset=${encodeURIComponent(datasetKey)}`);
+    const data = await response.json();
+
+    if (!data.success) return;
+
+    renderColumns(data.columns || [], data.defaultPreviewColumns || []);
+  }
+
+  function getSelectedColumns() {
+    return Array.from(document.querySelectorAll('.export-column:checked')).map(el => el.value);
+  }
+
+  datasetSelect.addEventListener('change', async function () {
+    await loadDatasetMeta(this.value);
+  });
+
+  document.getElementById('selectAllColumns').addEventListener('click', () => {
+    document.querySelectorAll('.export-column').forEach(el => el.checked = true);
+  });
+
+  document.getElementById('clearAllColumns').addEventListener('click', () => {
+    document.querySelectorAll('.export-column').forEach(el => el.checked = false);
+  });
+
+  previewBtn.addEventListener('click', async () => {
+    const dataset = datasetSelect.value;
+    const format = document.getElementById('format').value;
+    const columns = getSelectedColumns();
+
+    const params = new URLSearchParams();
+    params.set('dataset', dataset);
+    params.set('format', format);
+    params.set('columns', columns.join(','));
+
+    const response = await fetch(`/api/exports/preview?${params.toString()}`);
+    const data = await response.json();
+
+    if (!data.success) return;
+
+    document.getElementById('previewWrapper').classList.remove('d-none');
+    document.getElementById('previewCount').textContent = data.totalRows;
+
+    const head = document.getElementById('previewHead');
+    const body = document.getElementById('previewBody');
+
+    head.innerHTML = `<tr>${data.columns.map(col => `<th>${col}</th>`).join('')}</tr>`;
+    body.innerHTML = (data.sample || []).map(row => `
+      <tr>
+        ${data.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+      </tr>
+    `).join('');
+  });
+
+  exportForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const dataset = datasetSelect.value;
+    const format = document.getElementById('format').value;
+    const columns = getSelectedColumns();
+
+    const params = new URLSearchParams();
+    params.set('dataset', dataset);
+    params.set('format', format);
+    params.set('columns', columns.join(','));
+
+    window.location.href = `/exports/download?${params.toString()}`;
+  });
+</script>

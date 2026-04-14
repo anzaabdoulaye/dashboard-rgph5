@@ -90,3 +90,6 @@ ADD COLUMN firstConnect TINYINT(1) NOT NULL DEFAULT 1,
 ADD COLUMN passwordChangedAt DATETIME NULL;
 
 
+npm install exceljs
+
+
