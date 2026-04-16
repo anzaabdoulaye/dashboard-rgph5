@@ -97,6 +97,20 @@
           </div>
         <% } %>
     </div>
+
+    <!-- ZS -->
+<!-- ZS -->
+<div class="col-3">
+  <label>ZS</label>
+  <textarea
+    id="zs_display"
+    class="form-control"
+    rows="2"
+    disabled
+    placeholder="Aucune ZS"
+    style="resize: none; background: #f8f9fa;"
+  ></textarea>
+</div>
   
     <!-- ZD -->
     <div class="col-3">
@@ -119,7 +133,6 @@
     
     </div>
 </div>
-
     </div>
   </div>
 </div>
@@ -658,6 +671,8 @@ document.addEventListener('DOMContentLoaded', () => {
     region: document.getElementById('region'),
     departement: document.getElementById('departement'),
     commune: document.getElementById('commune'),
+    //zs: document.getElementById('zs'),
+    zsDisplay: document.getElementById('zs_display'),
     zd: document.getElementById('zd'),
     codeAgent: document.getElementById('code_agent'),
     refreshBtn: document.getElementById('refreshAll')
@@ -731,6 +746,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loader) loader.style.display = 'none';
   };
 
+  function renderZsDisplay(data) {
+  if (!selects.zsDisplay) return;
+
+  if (!data || data.length === 0) {
+    selects.zsDisplay.value = '';
+    return;
+  }
+
+  const values = data
+    .map(item => item.mo_zs)
+    .filter(Boolean);
+
+  selects.zsDisplay.value = values.join(' | ');
+}
+
   function debounce(fn, delay = 200) {
     let timeout;
     return (...args) => {
@@ -775,7 +805,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       
       console.log(`✅ Données reçues pour ${url}:`, data.length, 'éléments');
-      optionsCache[cacheKey] = data;
+    console.log(`📦 Contenu reçu pour ${select.id}:`, data);
+    optionsCache[cacheKey] = data;
       
       // Peupler le select
       populateSelect(select, data, valueField, textField);
@@ -955,6 +986,11 @@ async function updateStats() {
         selects.commune.innerHTML = '<option value="">-- Sélectionner --</option>';
         selects.commune.disabled = false;
       }
+
+       if (isActiveSelect(selects.zs)) {
+        selects.zs.innerHTML = '<option value="">-- Sélectionner --</option>';
+        selects.zs.disabled = false;
+     }
       
       if (isActiveSelect(selects.zd)) {
         selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
@@ -1038,15 +1074,39 @@ async function updateStats() {
       // Réinitialiser le code agent quand commune change
       if (selects.codeAgent) selects.codeAgent.value = '';
 
+      if (selects.zsDisplay) {
+        selects.zsDisplay.value = '';
+        }
+
       if (selects.commune.value) {
+        console.log('📥 Chargement ZS pour commune:', selects.commune.value);
+
+        const response = await fetch(`/api/location/zs?commune=${selects.commune.value}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const zsData = await response.json();
+
+        console.log('✅ ZS chargées pour commune', selects.commune.value, ':', zsData);
+        renderZsDisplay(zsData);
+
         console.log('📥 Chargement ZDs pour commune:', selects.commune.value);
-        await loadOptions(`/api/location/zds?commune=${selects.commune.value}`, 
-                          selects.zd, 'mo_zd', 'mo_zd');
-      }
+        await loadOptions(
+            `/api/location/zds?commune=${selects.commune.value}`,
+            selects.zd,
+            'mo_zd',
+            'mo_zd'
+        );
+        }
       
       debouncedUpdateStats();
     });
   }
+
+  if (isActiveSelect(selects.zs)) {
+  selects.zs.addEventListener('change', async (e) => {
+    console.log('🔘 ZS changée (sans impact stats):', e.target.value);
+    // ✅ aucun updateStats ici
+  });
+}
 
   // ✅ Charge les agents associés à la ZD sélectionnée
   async function loadAgentForZd(zdValue) {
@@ -1102,7 +1162,7 @@ async function updateStats() {
             // Réappliquer les événements après Select2
             const nativeSelect = $select[0];
             if (nativeSelect.id === 'region' || nativeSelect.id === 'departement' || 
-                nativeSelect.id === 'commune' || nativeSelect.id === 'zd') {
+                nativeSelect.id === 'commune' || nativeSelect.id === 'zs' || nativeSelect.id === 'zd') {
               
               $select.on('select2:select', function(e) {
                 console.log(`🎯 Select2: ${nativeSelect.id} sélectionné:`, e.params.data.id);
@@ -1151,6 +1211,10 @@ async function updateStats() {
         if (isActiveSelect(selects.commune)) {
           selects.commune.innerHTML = '<option value="">-- Sélectionner --</option>';
           selects.commune.disabled = false;
+        }
+        if (isActiveSelect(selects.zs)) {
+            selects.zs.innerHTML = '<option value="">-- Sélectionner --</option>';
+            selects.zs.disabled = false;
         }
         if (isActiveSelect(selects.zd)) {
           selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
@@ -1240,10 +1304,25 @@ async function updateStats() {
         }
         
         // Charger les ZDs pour cette commune
+        if (communeCode && isActiveSelect(selects.zs)) {
+  console.log('📥 ROLE_COMMUNAL - Chargement ZS pour commune:', communeCode);
+        await loadOptions(
+            `/api/location/zs?commune=${communeCode}`,
+            selects.zs,
+            'mo_zs',
+            'mo_zs'
+        );
+        }
+
+        // Charger les ZDs pour cette commune
         if (communeCode && isActiveSelect(selects.zd)) {
-          console.log('📥 ROLE_COMMUNAL - Chargement ZDs pour commune:', communeCode);
-          await loadOptions(`/api/location/zds?commune=${communeCode}`, 
-                           selects.zd, 'mo_zd', 'mo_zd');
+        console.log('📥 ROLE_COMMUNAL - Chargement ZDs pour commune:', communeCode);
+        await loadOptions(
+            `/api/location/zds?commune=${communeCode}`,
+            selects.zd,
+            'mo_zd',
+            'mo_zd'
+        );
         }
       }
       
@@ -1273,11 +1352,27 @@ async function updateStats() {
               console.log('✅ Commune présélectionnée:', communeCode);
               
               // Si commune sélectionnée, charger les ZDs
-              if (isActiveSelect(selects.zd) && selects.commune.value) {
+              // Si commune sélectionnée, charger les ZS
+                if (isActiveSelect(selects.zs) && selects.commune.value) {
+                console.log('📥 Chargement ZS pour commune:', selects.commune.value);
+                await loadOptions(
+                    `/api/location/zs?commune=${selects.commune.value}`,
+                    selects.zs,
+                    'mo_zs',
+                    'mo_zs'
+                );
+                }
+
+                // Si commune sélectionnée, charger les ZDs
+                if (isActiveSelect(selects.zd) && selects.commune.value) {
                 console.log('📥 Chargement ZDs pour commune:', selects.commune.value);
-                await loadOptions(`/api/location/zds?commune=${selects.commune.value}`, 
-                                  selects.zd, 'mo_zd', 'mo_zd');
-              }
+                await loadOptions(
+                    `/api/location/zds?commune=${selects.commune.value}`,
+                    selects.zd,
+                    'mo_zd',
+                    'mo_zd'
+                );
+                }
             }
           }
         }

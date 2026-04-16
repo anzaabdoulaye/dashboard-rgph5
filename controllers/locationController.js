@@ -78,6 +78,29 @@ exports.getCommunes = async (req, res) => {
   }
 };
 
+exports.getZs = async (req, res) => {
+  try {
+    const commune = req.query.commune || '';
+    const user = req.session.user;
+    const userId = user ? `${user.id}_${user.role}` : 'public';
+    const cacheKey = getCacheKey(`zs:${commune}`, userId);
+
+    if (selectsCache[cacheKey]) {
+      console.log(`✅ Cache hit: ${cacheKey}`);
+      return res.json(selectsCache[cacheKey]);
+    }
+
+    const zss = await menageService.getZs(commune, user);
+    selectsCache[cacheKey] = zss;
+    setTimeout(() => delete selectsCache[cacheKey], 10 * 60 * 1000);
+
+    res.json(zss);
+  } catch (err) {
+    console.error('❌ Erreur getZs:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // GET /zds
 exports.getZds = async (req, res) => {
   try {

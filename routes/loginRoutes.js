@@ -2,6 +2,39 @@ var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const { buildSessionUser } = require('../utils/sessionUserBuilder');
+
+/**
+ * Petit helper pour créer la session puis rediriger une seule fois
+ */
+function createUserSession(req, res, user) {
+    req.session.regenerate((err) => {
+        if (err) {
+            console.error('Erreur regenerate session:', err);
+            return res.status(500).send('Erreur serveur.');
+        }
+
+        try {
+            req.session.user = buildSessionUser(user);
+
+            req.session.save((saveErr) => {
+                if (saveErr) {
+                    console.error('Erreur save session:', saveErr);
+                    return res.status(500).send('Erreur serveur.');
+                }
+
+                if (req.session.user.firstConnect) {
+                    return res.redirect('/auth/change-password');
+                }
+
+                return res.redirect('/');
+            });
+        } catch (sessionBuildError) {
+            console.error('Erreur buildSessionUser:', sessionBuildError);
+            return res.status(500).send('Erreur lors de la création de la session.');
+        }
+    });
+}
 
 /* GET /auth/force-change-password : Forcer le changement même si pas première connexion */
 router.get('/force-change-password', async (req, res) => {
@@ -9,37 +42,30 @@ router.get('/force-change-password', async (req, res) => {
         return res.redirect('/auth/login');
     }
 
-    // Marquer comme première connexion pour forcer le changement
     req.session.user.firstConnect = true;
-    
-    res.redirect('/auth/change-password');
+    return res.redirect('/auth/change-password');
 });
-
 
 /* GET /auth/change-password : Afficher le formulaire */
 router.get('/change-password', (req, res) => {
-    // Vérifier si l'utilisateur est connecté
     if (!req.session.user) {
         return res.redirect('/auth/login');
     }
 
-    // Vérifier si c'est bien une première connexion
     if (!req.session.user.firstConnect) {
         return res.redirect('/users/');
     }
 
-    res.render('pages/changePassword', {
+    return res.render('pages/changePassword', {
         title: 'Changer le mot de passe',
         layout: false,
         user: req.session.user
     });
 });
 
-
 /* POST /auth/change-password : Traiter le changement */
 router.post('/change-password', async (req, res) => {
     try {
-        // Vérifier si l'utilisateur est connecté
         if (!req.session.user) {
             return res.redirect('/auth/login');
         }
@@ -47,7 +73,6 @@ router.post('/change-password', async (req, res) => {
         const { newPassword, confirmPassword } = req.body;
         const userId = req.session.user.id;
 
-        // Validation des champs
         if (!newPassword || !confirmPassword) {
             return res.render('pages/changePassword', {
                 title: 'Changer le mot de passe',
@@ -57,7 +82,6 @@ router.post('/change-password', async (req, res) => {
             });
         }
 
-        // Vérifier correspondance
         if (newPassword !== confirmPassword) {
             return res.render('pages/changePassword', {
                 title: 'Changer le mot de passe',
@@ -67,7 +91,6 @@ router.post('/change-password', async (req, res) => {
             });
         }
 
-        // Vérifier force du mot de passe
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
         if (!passwordRegex.test(newPassword)) {
             return res.render('pages/changePassword', {
@@ -78,18 +101,14 @@ router.post('/change-password', async (req, res) => {
             });
         }
 
-        // Récupérer l'utilisateur
         const user = await User.findByPk(userId);
         if (!user) {
-            req.session.destroy();
-            return res.redirect('/auth/login');
+            return req.session.destroy(() => res.redirect('/auth/login'));
         }
 
-        // Hasher le nouveau mot de passe
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-        // Mettre à jour l'utilisateur
         await User.update(
             {
                 password: hashedPassword,
@@ -99,10 +118,8 @@ router.post('/change-password', async (req, res) => {
             { where: { id: userId } }
         );
 
-        // Mettre à jour la session
         req.session.user.firstConnect = false;
 
-        // Rediriger avec message de succès
         return res.render('pages/login', {
             title: 'Connexion',
             layout: false,
@@ -122,20 +139,27 @@ router.post('/change-password', async (req, res) => {
 
 /* GET /auth/login : afficher la page de connexion */
 router.get('/login', (req, res) => {
-    res.render('pages/login', {
+    return res.render('pages/login', {
         title: 'Connexion',
         layout: false
     });
 });
-
 
 /* POST /auth/login : traiter le formulaire */
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
 
+        if (!username || !password) {
+            return res.render('pages/login', {
+                title: 'Connexion',
+                error: 'Veuillez renseigner le nom d’utilisateur et le mot de passe',
+                layout: false
+            });
+        }
+
         const user = await User.findOne({ where: { username } });
-        
+
         if (!user) {
             return res.render('pages/login', {
                 title: 'Connexion',
@@ -143,8 +167,7 @@ router.post('/login', async (req, res) => {
                 layout: false
             });
         }
-        
-        // ===== VÉRIFICATION DU STATUT =====
+
         if (user.statut !== '1' && user.statut !== 1) {
             return res.render('pages/login', {
                 title: 'Connexion',
@@ -153,87 +176,41 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        console.log('=== DEBUG COMPLET ===');
-        console.log('1. Password input:', `"${password}"`);
-        console.log('2. Password char codes:', [...password].map(c => c.charCodeAt(0)));
-        console.log('3. Hash in DB:', user.password);
-        
-        // Test 1 : Avec bcrypt normal
-        const match1 = await bcrypt.compare(password, user.password);
-        console.log('4. bcrypt.compare normal:', match1);
-        
-        // Test 2 : Avec trim
-        const match2 = await bcrypt.compare(password.trim(), user.password.trim());
-        console.log('5. bcrypt.compare avec trim:', match2);
-        
-        // Test 3 : Générer un nouveau hash et comparer
-        const testHash = await bcrypt.hash('1234', 10);
-        console.log('6. Nouveau hash pour "1234":', testHash);
-        const match3 = await bcrypt.compare('1234', testHash);
-        console.log('7. Test nouveau hash:', match3);
-        
-        // Test 4 : Comparer les 20 premiers caractères
-        console.log('8. Premier hash (20 chars):', user.password.substring(0, 20));
-        console.log('9. Test hash (20 chars):', testHash.substring(0, 20));
-        
-        // Test 5 : Vérifier le format du hash
-        const hashParts = user.password.split('$');
-        console.log('10. Format hash DB:', hashParts.slice(0, 4).join('$'));
-        
-        // SOLUTION TEMPORAIRE : Créer un nouveau hash si nécessaire
-        if (!match1 && !match2) {
-            console.log('11. Création nouveau hash...');
-            const newHash = await bcrypt.hash('1234', 10);
-            await User.update(
-                { password: newHash },
-                { where: { id: user.id } }
-            );
-            console.log('12. Hash mis à jour');
-            
-            // Recharger l'utilisateur
-            const updatedUser = await User.findByPk(user.id);
-            const finalMatch = await bcrypt.compare('1234', updatedUser.password);
-            console.log('13. Après mise à jour:', finalMatch);
-            
-            if (finalMatch) {
-                req.session.user = {
-                    id: updatedUser.id,
-                    username: updatedUser.username,
-                    nom: user.nom,
-                    prenom: user.prenom,
-                    role: updatedUser.role || updatedUser.roles[0],
-                    firstConnect: user.firstConnect
-                };
-                return res.redirect('/');
-            }
-        }
-        
-        if (match1 || match2) {
-            req.session.user = {
-                id: user.id,
-                username: user.username,
-                nom: user.nom,
-                prenom: user.prenom,
-                role: user.role || user.roles[0],
-                code: user.code,
-                regionCode: user.code && user.code.length >= 1 ? user.code.substring(0, 1) : null,
-                departementCode: user.code && user.code.length >= 3 ? user.code.substring(0, 3) : null,
-                communeCode: user.code && user.code.length >= 5 ? user.code : null,
-                firstConnect: user.firstConnect
-            };
-            return res.redirect('/');
+        const rawPassword = String(password);
+        const dbHash = String(user.password || '');
+
+        let passwordMatches = false;
+
+        try {
+            passwordMatches = await bcrypt.compare(rawPassword, dbHash);
+        } catch (bcryptError) {
+            console.error('Erreur bcrypt.compare:', bcryptError);
+            passwordMatches = false;
         }
 
-        // Redirection selon firstConnect
-        if (user.firstConnect) {
-            return res.redirect('/auth/change-password');
+        if (!passwordMatches) {
+            const trimmedInput = rawPassword.trim();
+            const trimmedHash = dbHash.trim();
+
+            if (trimmedInput !== rawPassword || trimmedHash !== dbHash) {
+                try {
+                    passwordMatches = await bcrypt.compare(trimmedInput, trimmedHash);
+                } catch (trimmedBcryptError) {
+                    console.error('Erreur bcrypt.compare trim:', trimmedBcryptError);
+                    passwordMatches = false;
+                }
+            }
         }
-        
-        return res.render('pages/login', {
-            title: 'Connexion',
-            error: 'Mot de passe incorrect',
-            layout: false
-        });
+
+        if (!passwordMatches) {
+            return res.render('pages/login', {
+                title: 'Connexion',
+                error: 'Mot de passe incorrect',
+                layout: false
+            });
+        }
+
+        return createUserSession(req, res, user);
 
     } catch (err) {
         console.error('Erreur login:', err);
@@ -244,7 +221,7 @@ router.post('/login', async (req, res) => {
 /* GET /auth/logout */
 router.get('/logout', (req, res) => {
     req.session.destroy(() => {
-        res.redirect('/auth/login');
+        return res.redirect('/auth/login');
     });
 });
 

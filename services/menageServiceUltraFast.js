@@ -70,7 +70,51 @@ function generateCacheKey(prefix, filters, user) {
   
   return `${prefix}:${userKey}:${filterKey}`;
 }
+async function getZs(commune, user = null) {
+  try {
+    const communeValue = commune ? String(commune).trim() : '';
 
+    console.log('================ getZs SERVICE ================');
+    console.log('[getZs] commune reçue =', communeValue);
+    console.log('[getZs] user =', {
+      id: user?.id || null,
+      username: user?.username || null,
+      role: user?.role || null,
+      code: user?.code || null
+    });
+
+    if (!communeValue) {
+      console.log('[getZs] commune vide -> retour []');
+      return [];
+    }
+
+    const sql = `
+      SELECT DISTINCT TRIM(mo_zs) AS mo_zs
+      FROM level1
+      WHERE mo_zs IS NOT NULL
+        AND TRIM(mo_zs) <> ''
+        AND CHAR_LENGTH(TRIM(mo_zs)) >= 5
+        AND LEFT(TRIM(mo_zs), 5) = :commune
+      ORDER BY TRIM(mo_zs) ASC
+    `;
+
+    console.log('[getZs] SQL =', sql.trim());
+    console.log('[getZs] replacements =', { commune: communeValue });
+
+    const rows = await menageDB.query(sql, {
+      replacements: { commune: communeValue },
+      type: QueryTypes.SELECT
+    });
+
+    console.log('[getZs] nb lignes =', rows.length);
+    console.log('[getZs] aperçu =', rows.slice(0, 10));
+
+    return rows;
+  } catch (err) {
+    console.error('❌ Erreur menageService.getZs:', err);
+    throw err;
+  }
+}
 // Fonctions par défaut
 function getDefaultStats() {
   return {
@@ -520,6 +564,7 @@ module.exports = {
   getRegions,
   getDepartements,
   getCommunes,
+  getZs,
   getZds,
   getAgentsByZd
 };

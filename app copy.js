@@ -9,7 +9,7 @@ var helmet = require('helmet');
 var rateLimit = require('express-rate-limit');
 
 const SequelizeStoreFactory = require('connect-session-sequelize');
-const db = require('./models');
+const db = require('./models'); // ou le chemin exact de votre instance sequelize
 const refreshSessionUser = require('./middleware/refreshSessionUser');
 
 var loginRouter = require('./routes/loginRoutes');
@@ -18,21 +18,24 @@ const userRoutes = require('./routes/userRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const filtersRouter = require('./routes/filters');
+const locationRouter = require('./routes/lieuRoutes');
 const checkFirstConnect = require('./middleware/checkFirstConnect');
+const lieuRouter = require('./routes/lieuRoutes');
 const { performanceMonitor, performanceMetrics } = require('./middleware/performanceMonitor');
 const apiRoutes = require('./routes/api');
 const mapAuthorization = require('./middleware/mapAuthorization');
 const exportRoutes = require('./routes/exportRoutes');
-const lieuRouter = require('./routes/lieuRoutes');
 
 var expressLayouts = require('express-ejs-layouts');
 
 var app = express();
 
-// Compression
+// ===== OPTIMISATIONS DE PERFORMANCE =====
+
+// 1. Compression GZIP pour toutes les réponses (réduit la taille de 70-90%)
 app.use(compression({
-  level: 6,
-  threshold: 1024,
+  level: 6, // Niveau de compression (1-9, 6 est un bon compromis)
+  threshold: 1024, // Compresser seulement si > 1KB
   filter: (req, res) => {
     if (req.headers['x-no-compression']) {
       return false;
@@ -41,55 +44,49 @@ app.use(compression({
   }
 }));
 
-// Sécurité
+// 2. Sécurité avec Helmet
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: false, // Désactiver CSP pour EJS (à configurer selon vos besoins)
 }));
 
-// Rate limiting global
+// 3. Rate limiting pour éviter les abus
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 500,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max:500, // Limite à 100 requêtes par IP
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
   standardHeaders: true,
   legacyHeaders: false,
 });
 
+// Appliquer le rate limiting sur toutes les routes
 app.use(limiter);
 
-// Rate limiting API
+// Rate limiting plus strict pour les API
 const apiLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 100,
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 30 requêtes par minute max
   message: 'Trop de requêtes API, veuillez ralentir.',
+});
+
+app.use((req, res, next) => {
+  res.locals.user = req.session?.user || req.user || null;
+  next();
 });
 
 app.use('/api/', apiLimiter);
 app.use('/stats/', apiLimiter);
 
-// View engine
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
-app.use(expressLayouts);
-app.set('layout', 'layouts/base');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-
-// Monitoring
-app.use(performanceMonitor);
-
-// Static files
-app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '1d',
-  etag: true,
-  lastModified: true,
-}));
-
-// Session store Sequelize
+// Configuration des sessions
+// app.use(session({
+//   secret: 'votre_secret',
+//   resave: false,
+//   saveUninitialized: false,
+//   cookie: { 
+//     maxAge: 3600000, // 1 heure (en millisecondes)
+//     secure: false,   // mettre à true si vous êtes en HTTPS
+//     httpOnly: true   // protection contre les attaques XSS
+//   } // Mettre à true si HTTPS
+// }));
 const SequelizeStore = SequelizeStoreFactory(session.Store);
 
 const sessionStore = new SequelizeStore({
@@ -101,7 +98,8 @@ const sessionStore = new SequelizeStore({
 
 sessionStore.sync();
 
-// Session
+app.set('trust proxy', 1);
+
 app.use(session({
   name: 'rgph5.sid',
   secret: process.env.SESSION_SECRET || 'changez-moi-en-production',
@@ -109,24 +107,35 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   rolling: true,
+  proxy: true,
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
     sameSite: 'lax',
+    //secure: process.env.NODE_ENV === 'production'
     secure: false
   }
 }));
 
-// Recharge utilisateur depuis la base
 app.use(refreshSessionUser);
 
-// User disponible dans les vues
 app.use((req, res, next) => {
   res.locals.user = req.session?.user || null;
   next();
 });
 
-// Messages flash simples
+
+app.use('/api', apiRoutes); 
+
+// 4. Static files avec cache optimisé
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1d', // Cache des fichiers statiques pendant 1 jour
+  etag: true,
+  lastModified: true,
+}));
+
+
+// Middleware pour passer les messages aux vues
 app.use((req, res, next) => {
   res.locals.success = req.session.success;
   res.locals.error = req.session.error;
@@ -135,41 +144,60 @@ app.use((req, res, next) => {
   next();
 });
 
-// Première connexion
+// Middleware pour capter la premiere connection
 app.use(checkFirstConnect);
 
-// Autorisation carte
-app.use(mapAuthorization);
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-// Routes API
-app.use('/api', apiRoutes);
-app.use('/api/location', locationRoutes);
-app.use('/api/filters', filtersRouter);
-app.use('/api', lieuRouter);
-//app.use('/stats', statsRoutes);
+app.use(expressLayouts);
+app.set('layout', 'layouts/base');
 
-// Auth
-app.use('/auth', loginRouter);
+app.use(logger('dev'));
+
+// Middleware de monitoring des performances
+app.use(performanceMonitor);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+app.use(mapAuthorization); 
 
 // Routes principales
 app.use('/', dashboardRoutes);
 app.use('/users', userRoutes);
-app.use('/', exportRoutes);
+app.use('/api/location', locationRoutes);
+app.use('/stats', statsRoutes);
+app.use('/api/filters', filtersRouter);
+app.use('/api', lieuRouter);
+app.use('/auth', loginRouter);
 
-// Route métriques
-app.get('/api/metrics', (req, res) => {
+// Route de monitoring des performances (protégée en production)
+app.get('/api/metrics', (req, res, next) => {
+  // En production, protéger cette route
   if (process.env.NODE_ENV === 'production' && req.query.token !== process.env.METRICS_TOKEN) {
     return res.status(403).json({ error: 'Accès refusé' });
   }
-  return performanceMetrics(req, res);
+  performanceMetrics(req, res);
 });
 
-// 404
+
+app.use((req, res, next) => {
+  res.locals.message = null;
+  next();
+});
+
+app.use('/', exportRoutes);
+
+
+// catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// Error handler
+// error handler
 app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
