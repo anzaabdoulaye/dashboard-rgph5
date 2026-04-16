@@ -4,40 +4,75 @@ const Region = require('./Region');
 const Departement = require('./Departement');
 const Commune = require('./Commune');
 
-// Définition des relations entre modèles
-Region.hasMany(Departement, { foreignKey: 'id_region', sourceKey: 'id_region' });
-Departement.belongsTo(Region, { foreignKey: 'id_region', targetKey: 'id_region' });
+// =========================
+// RELATIONS
+// =========================
 
-Departement.hasMany(Commune, { foreignKey: 'id_departement', sourceKey: 'id_departement' });
-Commune.belongsTo(Departement, { foreignKey: 'id_departement', targetKey: 'id_departement' });
+// Région -> Départements
+Region.hasMany(Departement, {
+  foreignKey: 'id_region'
+});
+Departement.belongsTo(Region, {
+  foreignKey: 'id_region'
+});
 
-Commune.hasMany(User, { foreignKey: 'commune_id', sourceKey: 'id_commune' });
-User.belongsTo(Commune, { foreignKey: 'commune_id', targetKey: 'id_commune' });
+// Département -> Communes
+Departement.hasMany(Commune, {
+  foreignKey: 'id_departement'
+});
+Commune.belongsTo(Departement, {
+  foreignKey: 'id_departement'
+});
 
-Region.hasMany(User, { foreignKey: 'region_id', sourceKey: 'id_region' });
-User.belongsTo(Region, { foreignKey: 'region_id', targetKey: 'id_region' });
+// Région -> Users
+Region.hasMany(User, {
+  foreignKey: 'region_id'
+});
+User.belongsTo(Region, {
+  foreignKey: 'region_id'
+});
 
-Departement.hasMany(User, { foreignKey: 'departement_id', sourceKey: 'id_departement' });
-User.belongsTo(Departement, { foreignKey: 'departement_id', targetKey: 'id_departement' });
+// Département -> Users
+Departement.hasMany(User, {
+  foreignKey: 'departement_id'
+});
+User.belongsTo(Departement, {
+  foreignKey: 'departement_id'
+});
 
-// Synchronisation
+// Commune -> Users
+Commune.hasMany(User, {
+  foreignKey: 'commune_id'
+});
+User.belongsTo(Commune, {
+  foreignKey: 'commune_id'
+});
+
+// =========================
+// SYNCHRONISATION
+// =========================
 const syncDatabase = async () => {
-    try {
-        await sequelize.authenticate();
-        console.log('Database connection established.');
-        await sequelize.sync({ alter: true });
-        console.log('Database synchronized.');
-    } catch (error) {
-        console.error('Database connection error:', error);
-    }
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection established.');
+
+    // En développement seulement
+    await sequelize.sync({ alter: true });
+    console.log('Database synchronized.');
+  } catch (error) {
+    console.error('Database connection error:', error);
+  }
 };
+
 syncDatabase();
 
-// Export de tous les modèles
+// =========================
+// EXPORTS
+// =========================
 module.exports = {
-    sequelize,
-    User,
-    Region,
-    Departement,
-    Commune,
+  sequelize,
+  User,
+  Region,
+  Departement,
+  Commune,
 };

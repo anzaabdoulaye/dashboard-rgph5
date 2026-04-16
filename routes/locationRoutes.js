@@ -13,8 +13,41 @@ router.get('/departements', requireAuth, locationController.getDepartements);
 // Récupérer les communes d'un département (avec restrictions)
 router.get('/communes', requireAuth, locationController.getCommunes);
 
+router.get('/zs', requireAuth, locationController.getZs);
+
 // Récupérer les ZD d'une commune (avec restrictions)
-router.get('/zds', requireAuth, locationController.getZds);
+exports.getZs = async (req, res) => {
+  try {
+    const commune = req.query.commune || '';
+    const user = req.session.user;
+    const userId = user ? `${user.id}_${user.role}` : 'public';
+    const cacheKey = getCacheKey(`zs:${commune}`, userId);
+
+    console.log('================ getZs CONTROLLER ================');
+    console.log('[getZs controller] req.query =', req.query);
+    console.log('[getZs controller] commune =', commune);
+    console.log('[getZs controller] cacheKey =', cacheKey);
+
+    if (selectsCache[cacheKey]) {
+      console.log(`✅ Cache hit: ${cacheKey}`);
+      console.log('[getZs controller] données cache =', selectsCache[cacheKey].slice(0, 10));
+      return res.json(selectsCache[cacheKey]);
+    }
+
+    const zss = await menageService.getZs(commune, user);
+
+    console.log('[getZs controller] données service nb =', zss.length);
+    console.log('[getZs controller] aperçu service =', zss.slice(0, 10));
+
+    selectsCache[cacheKey] = zss;
+    setTimeout(() => delete selectsCache[cacheKey], 10 * 60 * 1000);
+
+    return res.json(zss);
+  } catch (err) {
+    console.error('❌ Erreur getZs:', err);
+    return res.status(500).json({ error: err.message });
+  }
+};
 
 // Récupérer les agents associés à une ZD (depuis user_zd)
 router.get('/agents-by-zd', requireAuth, locationController.getAgentsByZd);

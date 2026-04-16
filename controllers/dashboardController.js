@@ -3,6 +3,235 @@
 const menageService = require('../services/menageServiceUltraFast');
 const fs = require('fs');
 const path = require('path');
+function deriveRole(user) {
+  const role = user?.role || null;
+  console.log('[deriveRole] role =', role);
+  return role;
+}
+
+function getUserDefaultRegion(user) {
+  if (!user) {
+    console.log('[getUserDefaultRegion] user absent');
+    return null;
+  }
+
+  let value = null;
+  let source = 'none';
+
+  if (user.regionCode) {
+    value = String(user.regionCode);
+    source = 'regionCode';
+  } else if (user.code && String(user.code).length >= 1) {
+    value = String(user.code).substring(0, 1);
+    source = 'code.substring(0,1)';
+  }
+
+  console.log('[getUserDefaultRegion]', {
+    userId: user.id || null,
+    username: user.username || null,
+    role: user.role || null,
+    code: user.code || null,
+    regionCode: user.regionCode || null,
+    result: value,
+    source
+  });
+
+  return value;
+}
+
+function getUserDefaultDepartement(user) {
+  if (!user) {
+    console.log('[getUserDefaultDepartement] user absent');
+    return null;
+  }
+
+  let value = null;
+  let source = 'none';
+
+  if (user.departementCode) {
+    value = String(user.departementCode);
+    source = 'departementCode';
+  } else if (user.code && String(user.code).length >= 3) {
+    value = String(user.code).substring(0, 3);
+    source = 'code.substring(0,3)';
+  }
+
+  console.log('[getUserDefaultDepartement]', {
+    userId: user.id || null,
+    username: user.username || null,
+    role: user.role || null,
+    code: user.code || null,
+    departementCode: user.departementCode || null,
+    result: value,
+    source
+  });
+
+  return value;
+}
+
+function getUserDefaultCommune(user) {
+  if (!user) {
+    console.log('[getUserDefaultCommune] user absent');
+    return null;
+  }
+
+  let value = null;
+  let source = 'none';
+
+  if (user.communeCode) {
+    value = String(user.communeCode);
+    source = 'communeCode';
+  } else if (user.code && String(user.code).length >= 5) {
+    value = String(user.code).substring(0, 5);
+    source = 'code.substring(0,5)';
+  }
+
+  console.log('[getUserDefaultCommune]', {
+    userId: user.id || null,
+    username: user.username || null,
+    role: user.role || null,
+    code: user.code || null,
+    communeCode: user.communeCode || null,
+    result: value,
+    source
+  });
+
+  return value;
+}
+
+function initializeFiltersForRole(user, filters) {
+  const role = deriveRole(user);
+
+  const nextFilters = {
+    region: filters.region || null,
+    departement: filters.departement || null,
+    commune: filters.commune || null,
+    zd: filters.zd || null
+  };
+
+  console.log('[initializeFiltersForRole] BEFORE', {
+    role,
+    inputFilters: filters,
+    sessionUser: {
+      id: user?.id || null,
+      username: user?.username || null,
+      role: user?.role || null,
+      code: user?.code || null,
+      regionCode: user?.regionCode || null,
+      departementCode: user?.departementCode || null,
+      communeCode: user?.communeCode || null
+    }
+  });
+
+  if (role === 'ROLE_REGIONAL') {
+    nextFilters.region = getUserDefaultRegion(user);
+  }
+
+  if (role === 'ROLE_DEPARTEMENTAL') {
+    nextFilters.region = getUserDefaultRegion(user);
+    nextFilters.departement = getUserDefaultDepartement(user);
+  }
+
+  if (role === 'ROLE_COMMUNAL') {
+    nextFilters.region = getUserDefaultRegion(user);
+    nextFilters.departement = getUserDefaultDepartement(user);
+    nextFilters.commune = getUserDefaultCommune(user);
+  }
+
+  console.log('[initializeFiltersForRole] AFTER', {
+    role,
+    resultFilters: nextFilters
+  });
+
+  return nextFilters;
+}
+
+function hasAccessToFilters(user, filters) {
+  const role = deriveRole(user);
+
+  if (!role) {
+    console.log('[hasAccessToFilters] REFUS: role absent', { filters });
+    return false;
+  }
+
+  if (role === 'ROLE_GLOBAL' || role === 'ROLE_ADMIN') {
+    console.log('[hasAccessToFilters] OK global/admin', { role, filters });
+    return true;
+  }
+
+  const allowedRegion = getUserDefaultRegion(user);
+  const allowedDepartement = getUserDefaultDepartement(user);
+  const allowedCommune = getUserDefaultCommune(user);
+
+  console.log('[hasAccessToFilters] CHECK', {
+    role,
+    requested: filters,
+    allowed: {
+      region: allowedRegion,
+      departement: allowedDepartement,
+      commune: allowedCommune
+    }
+  });
+
+  if (role === 'ROLE_REGIONAL') {
+    const ok = !filters.region || String(filters.region) === String(allowedRegion);
+    console.log('[hasAccessToFilters] ROLE_REGIONAL', { ok });
+    return ok;
+  }
+
+  if (role === 'ROLE_DEPARTEMENTAL') {
+    if (filters.region && String(filters.region) !== String(allowedRegion)) {
+      console.log('[hasAccessToFilters] REFUS départemental sur region', {
+        requested: filters.region,
+        allowed: allowedRegion
+      });
+      return false;
+    }
+
+    if (filters.departement && String(filters.departement) !== String(allowedDepartement)) {
+      console.log('[hasAccessToFilters] REFUS départemental sur departement', {
+        requested: filters.departement,
+        allowed: allowedDepartement
+      });
+      return false;
+    }
+
+    console.log('[hasAccessToFilters] OK ROLE_DEPARTEMENTAL');
+    return true;
+  }
+
+  if (role === 'ROLE_COMMUNAL') {
+    if (filters.region && String(filters.region) !== String(allowedRegion)) {
+      console.log('[hasAccessToFilters] REFUS communal sur region', {
+        requested: filters.region,
+        allowed: allowedRegion
+      });
+      return false;
+    }
+
+    if (filters.departement && String(filters.departement) !== String(allowedDepartement)) {
+      console.log('[hasAccessToFilters] REFUS communal sur departement', {
+        requested: filters.departement,
+        allowed: allowedDepartement
+      });
+      return false;
+    }
+
+    if (filters.commune && String(filters.commune) !== String(allowedCommune)) {
+      console.log('[hasAccessToFilters] REFUS communal sur commune', {
+        requested: filters.commune,
+        allowed: allowedCommune
+      });
+      return false;
+    }
+
+    console.log('[hasAccessToFilters] OK ROLE_COMMUNAL');
+    return true;
+  }
+
+  console.log('[hasAccessToFilters] REFUS final par défaut', { role, filters });
+  return false;
+}
 
 function normalizeFilterValue(value) {
     if (value === null || value === undefined) {
@@ -57,13 +286,35 @@ function getCacheKey(filters, user = null) {
 exports.showDashboard = async (req, res) => {
   try {
     // 1. Vérifier que l'utilisateur est connecté
-    if (!req.session.user) {
+    if (!req.session || !req.session.user) {
       return res.redirect('/auth/login');
     }
 
     const user = req.session.user;
-    
-    // 2. Récupérer les filtres de la requête
+
+    console.log('================ SHOW DASHBOARD ================');
+console.log('[showDashboard] session user =', {
+  id: user?.id || null,
+  username: user?.username || null,
+  nom: user?.nom || null,
+  prenom: user?.prenom || null,
+  role: user?.role || null,
+  code: user?.code || null,
+  regionCode: user?.regionCode || null,
+  departementCode: user?.departementCode || null,
+  communeCode: user?.communeCode || null,
+  region_id: user?.region_id || null,
+  departement_id: user?.departement_id || null,
+  commune_id: user?.commune_id || null
+});
+console.log('[showDashboard] raw query =', req.query);
+
+    // 2. Vérifier que le rôle est bien disponible
+    if (!user.role) {
+      return req.session.destroy(() => res.redirect('/auth/login'));
+    }
+
+    // 3. Récupérer les filtres de la requête
     let filters = {
       region: req.query.region || null,
       departement: req.query.departement || null,
@@ -71,48 +322,91 @@ exports.showDashboard = async (req, res) => {
       zd: req.query.zd || null
     };
 
-    // 3. INITIALISATION DES FILTRES SELON LE RÔLE
-    // Pour les rôles non-globaux, on initialise les filtres à leur territoire s'ils ne sont pas déjà définis
+    // 4. Initialiser les filtres selon le rôle
     filters = initializeFiltersForRole(user, filters);
 
-    // 4. VALIDATION CRITIQUE : Vérifier que l'utilisateur a le droit d'accéder aux filtres demandés
+    console.log('[showDashboard] filters after initialize =', filters);
+
+    // 5. Sécuriser l'accès aux filtres
     if (!hasAccessToFilters(user, filters)) {
-      // Si l'utilisateur essaie d'accéder à un territoire non autorisé,
-      // on réinitialise les filtres à son territoire assigné
+      console.log('[showDashboard] accès refusé, réinitialisation des filtres');
+      filters = {
+        region: getUserDefaultRegion(user),
+        departement: getUserDefaultDepartement(user),
+        commune: getUserDefaultCommune(user),
+        zd: null
+      };
+    }
+
+    // 6. Sécuriser les cas où un utilisateur territorial perdrait un niveau de filtre
+    if (user.role === 'ROLE_DEPARTEMENTAL') {
+      filters.region = getUserDefaultRegion(user);
+      filters.departement = getUserDefaultDepartement(user);
+
+      // commune reste libre si l'utilisateur filtre à l'intérieur de son département
+      if (filters.commune && !String(filters.commune).startsWith(String(filters.departement))) {
+        filters.commune = null;
+      }
+    }
+
+    if (user.role === 'ROLE_COMMUNAL') {
       filters.region = getUserDefaultRegion(user);
       filters.departement = getUserDefaultDepartement(user);
       filters.commune = getUserDefaultCommune(user);
-      filters.zd = null; // Toujours null par défaut
     }
 
-    // REMPLACER le bloc de chargement des stats par :
+    
 
-const cacheKey = getCacheKey(filters, user);
+    // 7. Préparer la clé de cache
+    const cacheKey = getCacheKey(filters, user);
 
-// Toujours essayer le cache d'abord
-let mainStats, populationStats, proportionAgricoles, averageEmigres;
+    let mainStats;
+    let populationStats;
+    let proportionAgricoles;
+    let averageEmigres;
 
-if (statsCache[cacheKey]) {
-  ({ mainStats, populationStats, proportionAgricoles, averageEmigres } = statsCache[cacheKey]);
-  console.log(`📦 Stats chargées depuis le cache mémoire (clé: ${cacheKey})`);
-} else {
-  // Pour ROLE_GLOBAL sans filtres, forcer le chargement national
-  const filtersForQuery = user.role === 'ROLE_GLOBAL' ? {
-    region: null, departement: null, commune: null, zd: null
-  } : filters;
-  
-  [mainStats, populationStats, proportionAgricoles, averageEmigres] = await Promise.all([
-    menageService.getMainStats(filtersForQuery, user),
-    menageService.getPopulationStatsCombined(filtersForQuery, user),
-    menageService.getProportionMenagesAgricoles(filtersForQuery, user),
-    menageService.getAverageEmigresPerMenage(filtersForQuery, user)
-  ]);
+    if (statsCache[cacheKey]) {
+      ({
+        mainStats,
+        populationStats,
+        proportionAgricoles,
+        averageEmigres
+      } = statsCache[cacheKey]);
 
-  statsCache[cacheKey] = { mainStats, populationStats, proportionAgricoles, averageEmigres };
-  setTimeout(() => delete statsCache[cacheKey], 5 * 60 * 1000);
-}
+      console.log(`📦 Stats chargées depuis le cache mémoire (clé: ${cacheKey})`);
+    } else {
+      // Pour ROLE_GLOBAL sans filtre explicite : vue nationale
+      const filtersForQuery =
+        user.role === 'ROLE_GLOBAL'
+          ? {
+              region: null,
+              departement: null,
+              commune: null,
+              zd: null
+            }
+          : filters;
 
-    // 5. Récupérer les listes pour les filtres AVEC restriction par rôle
+      [mainStats, populationStats, proportionAgricoles, averageEmigres] =
+        await Promise.all([
+          menageService.getMainStats(filtersForQuery, user),
+          menageService.getPopulationStatsCombined(filtersForQuery, user),
+          menageService.getProportionMenagesAgricoles(filtersForQuery, user),
+          menageService.getAverageEmigresPerMenage(filtersForQuery, user)
+        ]);
+
+      statsCache[cacheKey] = {
+        mainStats,
+        populationStats,
+        proportionAgricoles,
+        averageEmigres
+      };
+
+      setTimeout(() => {
+        delete statsCache[cacheKey];
+      }, 5 * 60 * 1000);
+    }
+
+    // 8. Charger les listes de filtres selon le rôle et les filtres déjà sécurisés
     const [regions, departements, communes, zds] = await Promise.all([
       menageService.getRegions(user),
       menageService.getDepartements(filters.region, user),
@@ -120,32 +414,32 @@ if (statsCache[cacheKey]) {
       menageService.getZds(filters.commune, user)
     ]);
 
-    // 6. Déterminer quels sélecteurs doivent être actifs selon le rôle
+    // 9. Préparer les indicateurs utilisateur pour la vue
     const userFlags = {
       ...user,
-      role: user.role, // CRITIQUE : passer le rôle brut
+
+      role: user.role,
+
       isGlobal: user.role === 'ROLE_GLOBAL',
       isRegional: user.role === 'ROLE_REGIONAL',
       isDepartemental: user.role === 'ROLE_DEPARTEMENTAL',
       isCommunal: user.role === 'ROLE_COMMUNAL',
-      
+
       canChangeRegion: user.role === 'ROLE_GLOBAL',
       canChangeDepartement: ['ROLE_GLOBAL', 'ROLE_REGIONAL'].includes(user.role),
       canChangeCommune: ['ROLE_GLOBAL', 'ROLE_REGIONAL', 'ROLE_DEPARTEMENTAL'].includes(user.role),
       canChangeZD: true,
-      
-      // Valeurs de présélection
+
       preselectedRegion: getUserDefaultRegion(user),
       preselectedDepartement: getUserDefaultDepartement(user),
       preselectedCommune: getUserDefaultCommune(user),
-      
-      // Valeurs par défaut pour les filtres
+
       defaultRegion: getUserDefaultRegion(user),
       defaultDepartement: getUserDefaultDepartement(user),
       defaultCommune: getUserDefaultCommune(user)
     };
 
-    // 7. Préparer les données pour la vue
+    // 10. Préparer les données pour la vue
     const viewData = {
       stats: {
         ...mainStats,
@@ -153,7 +447,7 @@ if (statsCache[cacheKey]) {
         proportionAgricoles,
         averageEmigres
       },
-      selects: { 
+      selects: {
         regions: prepareSelectOptions(regions, 'region', filters.region, user),
         departements: prepareSelectOptions(departements, 'departement', filters.departement, user),
         communes: prepareSelectOptions(communes, 'commune', filters.commune, user),
@@ -163,11 +457,10 @@ if (statsCache[cacheKey]) {
       user: userFlags
     };
 
-    res.render('pages/dashboard', viewData);
-
+    return res.render('pages/dashboard', viewData);
   } catch (err) {
     console.error('Erreur showDashboard:', err);
-    res.status(500).send('Erreur serveur');
+    return res.status(500).send('Erreur serveur');
   }
 };
 
