@@ -159,7 +159,12 @@
                                                 <div class="modal fade" id="editUserModal-<%= user.id %>" tabindex="-1">
                                                     <div class="modal-dialog modal-dialog-centered">
                                                         <div class="modal-content">
-                                                            <form method="POST" action="/users/edit/<%= user.id %>">
+                                                            <form method="POST"
+                                                                action="/users/edit/<%= user.id %>"
+                                                                data-user-id="<%= user.id %>"
+                                                                data-region-id="<%= user.region_id || '' %>"
+                                                                data-departement-id="<%= user.departement_id || '' %>"
+                                                                data-commune-id="<%= user.commune_id || '' %>">
                                                                 <div class="modal-header">
                                                                     <h5 class="modal-title">Modifier <%= user.nom %>
                                                                             <%= user.prenom %>
@@ -174,18 +179,25 @@
                                                                         placeholder="Prénom" required>
                                                                     <input type="email" name="email" value="<%= user.email %>" class="form-control mb-2"
                                                                         placeholder="Email" required>
-                                                
+                                                                        <%
+                                                                            let parsedRoles = [];
+                                                                            try {
+                                                                                if (Array.isArray(user.roles)) {
+                                                                                    parsedRoles = user.roles;
+                                                                                } else if (typeof user.roles === 'string') {
+                                                                                    parsedRoles = user.roles.trim().startsWith('[') ? JSON.parse(user.roles) : [user.roles];
+                                                                                }
+                                                                            } catch (e) {
+                                                                                parsedRoles = [];
+                                                                            }
+                                                                            %>
                                                                     <!-- Sélection du rôle -->
                                                                     <select name="roles" id="editRoleSelect-<%= user.id %>" class="form-control mb-2" required>
                                                                         <option value="">-- Choisir un rôle --</option>
-                                                                        <option value="ROLE_GLOBAL" <%=user.roles.includes('ROLE_GLOBAL') ? 'selected' : '' %>>Global
-                                                                        </option>
-                                                                        <option value="ROLE_REGIONAL" <%=user.roles.includes('ROLE_REGIONAL') ? 'selected' : '' %>
-                                                                            >Régional</option>
-                                                                        <option value="ROLE_DEPARTEMENTAL" <%=user.roles.includes('ROLE_DEPARTEMENTAL') ? 'selected'
-                                                                            : '' %>>Départemental</option>
-                                                                        <option value="ROLE_COMMUNAL" <%=user.roles.includes('ROLE_COMMUNAL') ? 'selected' : '' %>
-                                                                            >Communal</option>
+                                                                        <option value="ROLE_GLOBAL" <%= parsedRoles.includes('ROLE_GLOBAL') ? 'selected' : '' %>>Global</option>
+                                                                        <option value="ROLE_REGIONAL" <%= parsedRoles.includes('ROLE_REGIONAL') ? 'selected' : '' %>>Régional</option>
+                                                                        <option value="ROLE_DEPARTEMENTAL" <%= parsedRoles.includes('ROLE_DEPARTEMENTAL') ? 'selected' : '' %>>Départemental</option>
+                                                                        <option value="ROLE_COMMUNAL" <%= parsedRoles.includes('ROLE_COMMUNAL') ? 'selected' : '' %>>Communal</option>
                                                                     </select>
                                                 
                                                                     <!-- Champs dynamiques pour la localisation -->
@@ -692,182 +704,202 @@
             }
              
             // Écouter l'ouverture des modaux de modification
-            document.querySelectorAll('[id^="editUserModal-"]').forEach(modalElement => {
-                modalElement.addEventListener('show.bs.modal', function (event) {
-                    const modalId = this.id;
-                    const userId = modalId.replace('editUserModal-', '');
-
-                    console.log(`🔄 Initialisation du modal pour l'utilisateur ${userId}`);
-                    initializeEditModal(userId);
-                });
-            });
-
-            function initializeEditModal(userId) {
-                const roleSelect = document.getElementById(`editRoleSelect-${userId}`);
-                const regionContainer = document.getElementById(`editRegionContainer-${userId}`);
-                const departementContainer = document.getElementById(`editDepartementContainer-${userId}`);
-                const communeContainer = document.getElementById(`editCommuneContainer-${userId}`);
-
-                const regionSelect = document.getElementById(`editRegionSelect-${userId}`);
-                const departementSelect = document.getElementById(`editDepartementSelect-${userId}`);
-                const communeSelect = document.getElementById(`editCommuneSelect-${userId}`);
-
-                if (!roleSelect || !regionContainer) {
-                    console.error(`❌ Éléments non trouvés pour l'utilisateur ${userId}`);
-                    return;
-                }
-
-                // Fonction pour mettre à jour les champs selon le rôle
-                async function updateEditRoleFields(role) {
-                    console.log(`🔄 Mise à jour des champs pour le rôle: ${role}, utilisateur: ${userId}`);
-
-                    // Masquer tous les champs d'abord
-                    regionContainer.style.display = "none";
-                    departementContainer.style.display = "none";
-                    communeContainer.style.display = "none";
-
-                    // Réinitialiser les sélections
-                    regionSelect.innerHTML = '<option value="">-- Sélectionner une région --</option>';
-                    departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
-                    communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
-
-                    // Afficher les champs selon le rôle
-                    switch (role) {
-                        case "ROLE_REGIONAL":
-                            regionContainer.style.display = "block";
-                            await loadEditRegions(userId);
-                            break;
-
-                        case "ROLE_DEPARTEMENTAL":
-                            regionContainer.style.display = "block";
-                            departementContainer.style.display = "block";
-                            await loadEditRegions(userId);
-                            break;
-
-                        case "ROLE_COMMUNAL":
-                            regionContainer.style.display = "block";
-                            departementContainer.style.display = "block";
-                            communeContainer.style.display = "block";
-                            await loadEditRegions(userId);
-                            break;
-
-                        case "ROLE_GLOBAL":
-                        default:
-                            // Rien à afficher
-                            break;
-                    }
-                }
-
-                // Événement changement de rôle dans l'édition
-                roleSelect.addEventListener("change", async function () {
-                    const role = this.value.trim();
-                    console.log(`🌀 Rôle sélectionné (édition): ${role}`);
-                    await updateEditRoleFields(role);
-                });
-
-                // Événement changement de région dans l'édition
-                regionSelect.addEventListener("change", async function () {
-                    const regionId = this.value;
-                    if (!regionId) {
-                        departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
-                        communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
-                        return;
-                    }
-                    console.log(`➡️ Région sélectionnée (édition): ${regionId}`);
-                    await loadEditDepartements(userId, regionId);
-                });
-
-                // Événement changement de département dans l'édition
-                departementSelect.addEventListener("change", async function () {
-                    const depId = this.value;
-                    if (!depId) {
-                        communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
-                        return;
-                    }
-                    console.log(`➡️ Département sélectionné (édition): ${depId}`);
-                    await loadEditCommunes(userId, depId);
-                });
-
-                // Initialiser les champs selon le rôle actuel
-                const currentRole = roleSelect.value;
-                console.log(`🎯 Rôle actuel de l'utilisateur ${userId}: ${currentRole}`);
-                updateEditRoleFields(currentRole);
-            }
-
-            // Fonctions AJAX pour l'édition
-            async function loadEditRegions(userId) {
-                try {
-                    console.log(`📡 Chargement des régions pour l'édition (user: ${userId})`);
-                    const res = await fetch("/api/regions");
-
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-                    const data = await res.json();
-                    const regionSelect = document.getElementById(`editRegionSelect-${userId}`);
-
-                    regionSelect.innerHTML = '<option value="">-- Sélectionner une région --</option>';
-                    data.forEach(r => {
-                        regionSelect.innerHTML += `<option value="${r.id}">${r.libelle}</option>`;
-                    });
-
-                    console.log(`✅ Régions chargées pour l'édition: ${data.length}`);
-
-                    // Pré-sélectionner la région actuelle de l'utilisateur si elle existe
-                    // Vous devrez passer cette information depuis le serveur
-                    // const currentRegionId = ...; // À récupérer depuis les données utilisateur
-
-                } catch (e) {
-                    console.error(`❌ Erreur chargement régions (édition):`, e);
-                }
-            }
-
-            async function loadEditDepartements(userId, regionId) {
-                try {
-                    console.log(`📡 Chargement des départements pour région ${regionId} (user: ${userId})`);
-                    const res = await fetch(`/api/departements/${regionId}`);
-
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-                    const data = await res.json();
-                    const departementSelect = document.getElementById(`editDepartementSelect-${userId}`);
-
-                    departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
-                    data.forEach(d => {
-                        departementSelect.innerHTML += `<option value="${d.id}">${d.libelle}</option>`;
-                    });
-
-                    console.log(`✅ Départements chargés pour l'édition: ${data.length}`);
-
-                } catch (e) {
-                    console.error(`❌ Erreur chargement départements (édition):`, e);
-                }
-            }
-
-            async function loadEditCommunes(userId, depId) {
-                try {
-                    console.log(`📡 Chargement des communes pour département ${depId} (user: ${userId})`);
-                    const res = await fetch(`/api/communes/${depId}`);
-
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-                    const data = await res.json();
-                    const communeSelect = document.getElementById(`editCommuneSelect-${userId}`);
-
-                    communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
-                    data.forEach(c => {
-                        communeSelect.innerHTML += `<option value="${c.id}">${c.libelle}</option>`;
-                    });
-
-                    console.log(`✅ Communes chargées pour l'édition: ${data.length}`);
-
-                } catch (e) {
-                    console.error(`❌ Erreur chargement communes (édition):`, e);
-                }
-            }
+            
 
         });
     </script>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('[id^="editUserModal-"]').forEach(modalElement => {
+        modalElement.addEventListener('show.bs.modal', async function () {
+            const userId = this.id.replace('editUserModal-', '');
+            await initializeEditModal(userId);
+        });
+    });
 
+    async function initializeEditModal(userId) {
+        const modal = document.getElementById(`editUserModal-${userId}`);
+        if (!modal) return;
+
+        const form = modal.querySelector('form');
+        if (!form) return;
+
+        const roleSelect = document.getElementById(`editRoleSelect-${userId}`);
+        const regionContainer = document.getElementById(`editRegionContainer-${userId}`);
+        const departementContainer = document.getElementById(`editDepartementContainer-${userId}`);
+        const communeContainer = document.getElementById(`editCommuneContainer-${userId}`);
+
+        const regionSelect = document.getElementById(`editRegionSelect-${userId}`);
+        const departementSelect = document.getElementById(`editDepartementSelect-${userId}`);
+        const communeSelect = document.getElementById(`editCommuneSelect-${userId}`);
+
+        const currentRole = roleSelect.value;
+        const currentRegionId = form.dataset.regionId || '';
+        const currentDepartementId = form.dataset.departementId || '';
+        const currentCommuneId = form.dataset.communeId || '';
+
+        console.log('=== INIT EDIT MODAL ===', {
+            userId,
+            currentRole,
+            currentRegionId,
+            currentDepartementId,
+            currentCommuneId
+        });
+
+        function resetSelects() {
+            regionSelect.innerHTML = '<option value="">-- Sélectionner une région --</option>';
+            departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+            communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+        }
+
+        function hideAllContainers() {
+            regionContainer.style.display = 'none';
+            departementContainer.style.display = 'none';
+            communeContainer.style.display = 'none';
+        }
+
+        async function loadEditRegions(selectedRegionId = '') {
+            try {
+                const res = await fetch('/api/loc/regions');
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+                const data = await res.json();
+
+                regionSelect.innerHTML = '<option value="">-- Sélectionner une région --</option>';
+                data.forEach(r => {
+                    regionSelect.innerHTML += `
+                        <option value="${r.id}" ${String(r.id) === String(selectedRegionId) ? 'selected' : ''}>
+                            ${r.libelle}
+                        </option>
+                    `;
+                });
+
+                console.log('✅ Régions chargées (édition):', data.length, 'selected=', selectedRegionId);
+            } catch (e) {
+                console.error('❌ Erreur chargement régions (édition):', e);
+                regionSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            }
+        }
+
+        async function loadEditDepartements(regionId, selectedDepartementId = '') {
+            try {
+                if (!regionId) {
+                    departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+                    return;
+                }
+
+                const res = await fetch(`/api/loc/departements/${regionId}`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+                const data = await res.json();
+
+                departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+                data.forEach(d => {
+                    departementSelect.innerHTML += `
+                        <option value="${d.id}" ${String(d.id) === String(selectedDepartementId) ? 'selected' : ''}>
+                            ${d.libelle}
+                        </option>
+                    `;
+                });
+
+                console.log('✅ Départements chargés (édition):', data.length, 'selected=', selectedDepartementId);
+            } catch (e) {
+                console.error('❌ Erreur chargement départements (édition):', e);
+                departementSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            }
+        }
+
+        async function loadEditCommunes(departementId, selectedCommuneId = '') {
+            try {
+                if (!departementId) {
+                    communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+                    return;
+                }
+
+                const res = await fetch(`/api/loc/communes/${departementId}`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+                const data = await res.json();
+
+                communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+                data.forEach(c => {
+                    communeSelect.innerHTML += `
+                        <option value="${c.id}" ${String(c.id) === String(selectedCommuneId) ? 'selected' : ''}>
+                            ${c.libelle}
+                        </option>
+                    `;
+                });
+
+                console.log('✅ Communes chargées (édition):', data.length, 'selected=', selectedCommuneId);
+            } catch (e) {
+                console.error('❌ Erreur chargement communes (édition):', e);
+                communeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            }
+        }
+
+        async function updateEditRoleFields(role, keepCurrentValues = true) {
+            hideAllContainers();
+            resetSelects();
+
+            const regionId = keepCurrentValues ? currentRegionId : '';
+            const departementId = keepCurrentValues ? currentDepartementId : '';
+            const communeId = keepCurrentValues ? currentCommuneId : '';
+
+            switch (role) {
+                case 'ROLE_REGIONAL':
+                    regionContainer.style.display = 'block';
+                    await loadEditRegions(regionId);
+                    break;
+
+                case 'ROLE_DEPARTEMENTAL':
+                    regionContainer.style.display = 'block';
+                    departementContainer.style.display = 'block';
+                    await loadEditRegions(regionId);
+                    await loadEditDepartements(regionId, departementId);
+                    break;
+
+                case 'ROLE_COMMUNAL':
+                    regionContainer.style.display = 'block';
+                    departementContainer.style.display = 'block';
+                    communeContainer.style.display = 'block';
+                    await loadEditRegions(regionId);
+                    await loadEditDepartements(regionId, departementId);
+                    await loadEditCommunes(departementId, communeId);
+                    break;
+
+                case 'ROLE_GLOBAL':
+                default:
+                    break;
+            }
+        }
+
+        roleSelect.onchange = async function () {
+            await updateEditRoleFields(this.value, false);
+        };
+
+        regionSelect.onchange = async function () {
+            const regionId = this.value;
+            departementSelect.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+            communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+
+            if (roleSelect.value === 'ROLE_DEPARTEMENTAL' || roleSelect.value === 'ROLE_COMMUNAL') {
+                await loadEditDepartements(regionId);
+            }
+        };
+
+        departementSelect.onchange = async function () {
+            const depId = this.value;
+            communeSelect.innerHTML = '<option value="">-- Sélectionner une commune --</option>';
+
+            if (roleSelect.value === 'ROLE_COMMUNAL') {
+                await loadEditCommunes(depId);
+            }
+        };
+
+        await updateEditRoleFields(currentRole, true);
+    }
+});
+</script>
 </body>
 
 </html>

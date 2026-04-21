@@ -5,7 +5,7 @@ const User = require('../models/User');
 const { buildSessionUser } = require('../utils/sessionUserBuilder');
 
 /**
- * Petit helper pour créer la session puis rediriger une seule fois
+ * Crée une session utilisateur propre et persistée avant redirection.
  */
 function createUserSession(req, res, user) {
     req.session.regenerate((err) => {
@@ -36,24 +36,48 @@ function createUserSession(req, res, user) {
     });
 }
 
-/* GET /auth/force-change-password : Forcer le changement même si pas première connexion */
+/**
+ * Détruit proprement la session puis redirige.
+ */
+function destroySession(req, callback) {
+    if (!req.session) {
+        return callback();
+    }
+
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Erreur destroy session:', err);
+            return callback(err);
+        }
+        return callback();
+    });
+}
+
+/* GET /auth/force-change-password */
 router.get('/force-change-password', async (req, res) => {
     if (!req.session.user) {
         return res.redirect('/auth/login');
     }
 
     req.session.user.firstConnect = true;
-    return res.redirect('/auth/change-password');
+
+    req.session.save((err) => {
+        if (err) {
+            console.error('Erreur save session force-change-password:', err);
+            return res.status(500).send('Erreur serveur.');
+        }
+        return res.redirect('/auth/change-password');
+    });
 });
 
-/* GET /auth/change-password : Afficher le formulaire */
+/* GET /auth/change-password */
 router.get('/change-password', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/auth/login');
     }
 
     if (!req.session.user.firstConnect) {
-        return res.redirect('/users/');
+        return res.redirect('/');
     }
 
     return res.render('pages/changePassword', {
@@ -63,7 +87,7 @@ router.get('/change-password', (req, res) => {
     });
 });
 
-/* POST /auth/change-password : Traiter le changement */
+/* POST /auth/change-password */
 router.post('/change-password', async (req, res) => {
     try {
         if (!req.session.user) {
@@ -91,7 +115,9 @@ router.post('/change-password', async (req, res) => {
             });
         }
 
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+        const passwordRegex =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+
         if (!passwordRegex.test(newPassword)) {
             return res.render('pages/changePassword', {
                 title: 'Changer le mot de passe',
@@ -101,51 +127,55 @@ router.post('/change-password', async (req, res) => {
             });
         }
 
-        const user = await User.findByPk(userId);
-        if (!user) {
-            return req.session.destroy(() => res.redirect('/auth/login'));
+        const dbUser = await User.findByPk(userId);
+
+        if (!dbUser) {
+            return destroySession(req, () => res.redirect('/auth/login'));
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-        await User.update(
-            {
-                password: hashedPassword,
-                firstConnect: false,
-                passwordChangedAt: new Date()
-            },
-            { where: { id: userId } }
-        );
-
-        req.session.user.firstConnect = false;
-
-        return res.render('pages/login', {
-            title: 'Connexion',
-            layout: false,
-            success: 'Mot de passe changé avec succès ! Vous pouvez maintenant vous connecter.'
+        await dbUser.update({
+            password: hashedPassword,
+            firstConnect: false,
+            passwordChangedAt: new Date()
         });
 
+        // Important :
+        // on recharge l'utilisateur à jour puis on recrée une session complète
+        const freshUser = await User.findByPk(userId);
+
+        if (!freshUser) {
+            return destroySession(req, () => res.redirect('/auth/login'));
+        }
+
+        return createUserSession(req, res, freshUser);
     } catch (err) {
         console.error('Erreur changement mot de passe:', err);
+
         return res.render('pages/changePassword', {
             title: 'Changer le mot de passe',
             layout: false,
             error: 'Erreur lors du changement de mot de passe',
-            user: req.session.user
+            user: req.session.user || null
         });
     }
 });
 
-/* GET /auth/login : afficher la page de connexion */
+/* GET /auth/login */
 router.get('/login', (req, res) => {
+    if (req.session && req.session.user && !req.session.user.firstConnect) {
+        return res.redirect('/');
+    }
+
     return res.render('pages/login', {
         title: 'Connexion',
         layout: false
     });
 });
 
-/* POST /auth/login : traiter le formulaire */
+/* POST /auth/login */
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -171,7 +201,7 @@ router.post('/login', async (req, res) => {
         if (user.statut !== '1' && user.statut !== 1) {
             return res.render('pages/login', {
                 title: 'Connexion',
-                error: 'Votre compte est désactivé. Contactez l\'administrateur.',
+                error: 'Votre compte est désactivé. Contactez l’administrateur.',
                 layout: false
             });
         }
@@ -211,7 +241,6 @@ router.post('/login', async (req, res) => {
         }
 
         return createUserSession(req, res, user);
-
     } catch (err) {
         console.error('Erreur login:', err);
         return res.status(500).send('Erreur serveur.');
@@ -220,9 +249,7 @@ router.post('/login', async (req, res) => {
 
 /* GET /auth/logout */
 router.get('/logout', (req, res) => {
-    req.session.destroy(() => {
-        return res.redirect('/auth/login');
-    });
+    return destroySession(req, () => res.redirect('/auth/login'));
 });
 
 module.exports = router;
