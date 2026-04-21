@@ -70,8 +70,9 @@
                                 <div class="col-sm">
                                     <div class="d-flex justify-content-sm-end">
                                         <div class="search-box ms-2">
-                                            <input type="text" id="searchInput" class="form-control search"
-                                                placeholder="Rechercher par nom, prénom ou email...">
+                                           <input type="text" id="searchInput" class="form-control search"
+                                                placeholder="Rechercher par nom, prénom, username ou email..."
+                                                value="<%= search || '' %>">
                                             <i class="ri-search-line search-icon"></i>
                                         </div>
                                     </div>
@@ -330,6 +331,46 @@
                                     <% } %>
                                         </tbody>
                                         </table>
+                                            <% if (totalPages && totalPages > 1) { %>
+                                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                                                <div class="text-muted">
+                                                    Page <strong><%= currentPage %></strong> sur <strong><%= totalPages %></strong>
+                                                    — <strong><%= totalUsers %></strong> utilisateur(s)
+                                                </div>
+
+                                                <nav aria-label="Pagination utilisateurs">
+                                                    <ul class="pagination mb-0">
+                                                        <li class="page-item <%= currentPage <= 1 ? 'disabled' : '' %>">
+                                                            <a class="page-link"
+                                                            href="/users?page=<%= currentPage - 1 %>&limit=<%= limit %>&search=<%= encodeURIComponent(search || '') %>">
+                                                                Précédent
+                                                            </a>
+                                                        </li>
+
+                                                        <% 
+                                                        const startPage = Math.max(1, currentPage - 2);
+                                                        const endPage = Math.min(totalPages, currentPage + 2);
+                                                        %>
+
+                                                        <% for (let i = startPage; i <= endPage; i++) { %>
+                                                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                                                <a class="page-link"
+                                                                href="/users?page=<%= i %>&limit=<%= limit %>&search=<%= encodeURIComponent(search || '') %>">
+                                                                    <%= i %>
+                                                                </a>
+                                                            </li>
+                                                        <% } %>
+
+                                                        <li class="page-item <%= currentPage >= totalPages ? 'disabled' : '' %>">
+                                                            <a class="page-link"
+                                                            href="/users?page=<%= currentPage + 1 %>&limit=<%= limit %>&search=<%= encodeURIComponent(search || '') %>">
+                                                                Suivant
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </nav>
+                                            </div>
+                                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -350,7 +391,6 @@
                         <input type="text" name="nom" placeholder="Nom" class="form-control mb-2" required>
                         <input type="text" name="prenom" placeholder="Prénom" class="form-control mb-2" required>
                         <input type="email" name="email" placeholder="Email" class="form-control mb-2" required>
-                        <input type="password" name="password" class="form-control mb-2" hidden >
                         <input type="text" name="username" class="form-control mb-2" hidden>
 
                         <select name="roles" id="roleSelect" class="form-control mb-2" required>
@@ -584,7 +624,6 @@
                 clearTimeout(searchTimeout);
                 const searchTerm = this.value.trim();
 
-                // Délai de 500ms avant la recherche (pour éviter trop de requêtes)
                 searchTimeout = setTimeout(() => {
                     if (searchTerm.length === 0 || searchTerm.length >= 2) {
                         searchUsers(searchTerm);
@@ -598,7 +637,6 @@
                     const response = await fetch(url);
                     const html = await response.text();
 
-                    // Extraire le tableau des utilisateurs du HTML retourné
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     const newTableBody = doc.querySelector('tbody');
@@ -607,7 +645,6 @@
                         userTableBody.innerHTML = newTableBody.innerHTML;
                     }
 
-                    // Mettre à jour le compteur des résultats
                     updateResultsCount(searchTerm);
 
                 } catch (error) {
@@ -619,10 +656,8 @@
                 const rows = document.querySelectorAll('tbody tr');
                 let actualResults = 0;
 
-                // Compter seulement les lignes qui ont des données utilisateur (pas le message "Aucun résultat")
                 rows.forEach(row => {
                     const firstCell = row.cells[0];
-                    // Si la première cellule n'est pas un colspan, c'est une ligne de données
                     if (firstCell && !firstCell.hasAttribute('colspan')) {
                         actualResults++;
                     }
@@ -655,7 +690,6 @@
 
                 return countElement;
             }
-
              
             // Écouter l'ouverture des modaux de modification
             document.querySelectorAll('[id^="editUserModal-"]').forEach(modalElement => {
