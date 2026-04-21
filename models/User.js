@@ -88,53 +88,50 @@ const User = sequelize.define('User', {
   timestamps: false,
 
   hooks: {
-    beforeCreate: async (user) => {
- 
-      if (!user.username && user.nom && user.prenom) {
-        user.username = `${user.nom.charAt(0).toLowerCase()}${user.prenom.toLowerCase()}`;
-      }
+  beforeCreate: async (user) => {
+    if (!user.username && user.nom && user.prenom) {
+      user.username = `${user.nom.charAt(0).toLowerCase()}${user.prenom.toLowerCase()}`;
+    }
 
-      if (!user.password) {
-        user.password = '1234';
-      }
+    if (!user.password || String(user.password).trim() === '') {
+      user.password = '1234';
+    }
 
+    // Hasher seulement si ce n'est pas déjà un hash bcrypt
+    if (!String(user.password).startsWith('$2b$')) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(user.password, salt);
+    }
 
-
-       // Si password pas fourni → mettre 1234
-      if (!user.password) user.password = '1234';
-
-      // NE HASHER QUE SI NON HASHÉ
-      if (!user.password.startsWith('$2b$')) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-      }
-
-      if (user.firstConnect === undefined) {
+    if (user.firstConnect === undefined) {
       user.firstConnect = true;
     }
 
-      await generateUserCode(user);
-    },
+    await generateUserCode(user);
+  },
 
-    beforeUpdate: async (user) => {
-
-      if (user.changed('password')) {
+  beforeUpdate: async (user) => {
+    if (user.changed('password')) {
       user.firstConnect = false;
       user.passwordChangedAt = new Date();
-    }
-    
-      if (user.changed('password')) {
+
+      // Hasher seulement si ce n'est pas déjà hashé
+      if (!String(user.password).startsWith('$2b$')) {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
       }
+    }
 
-      // Regénération du code si certains champs changent
-      if (user.changed('region_id') || user.changed('departement_id') ||
-          user.changed('commune_id') || user.changed('roles')) {
-        await generateUserCode(user);
-      }
-    },
+    if (
+      user.changed('region_id') ||
+      user.changed('departement_id') ||
+      user.changed('commune_id') ||
+      user.changed('roles')
+    ) {
+      await generateUserCode(user);
+    }
   },
+},
 });
 
 // Fonction pour générer le code utilisateur selon le rôle
