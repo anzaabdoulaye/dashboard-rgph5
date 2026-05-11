@@ -91,5 +91,11 @@ ADD COLUMN passwordChangedAt DATETIME NULL;
 
 
 npm install exceljs
+npm install connect-session-sequelize
 
+TAF 
+    Recommandation finale pour le bug Erreur Sequelize Too many keys specified; max 64 keys allowed
+        Court terme : passez alter: false pour que l’app redémarre.
+
+        Long terme : migrez vers des migrations Sequelize (via sequelize-cli) plutôt que sync({ alter: true }) en production.
 

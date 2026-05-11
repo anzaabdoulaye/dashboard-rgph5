@@ -100,16 +100,13 @@
 
     <!-- ZS -->
 <!-- ZS -->
+<!-- ZS -->
 <div class="col-3">
-  <label>ZS</label>
-  <textarea
-    id="zs_display"
-    class="form-control"
-    rows="2"
-    disabled
-    placeholder="Aucune ZS"
-    style="resize: none; background: #f8f9fa;"
-  ></textarea>
+    <label>ZS</label>
+
+    <select id="zs" class="form-select">
+        <option value="">-- Sélectionner --</option>
+    </select>
 </div>
   
     <!-- ZD -->
@@ -671,8 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
     region: document.getElementById('region'),
     departement: document.getElementById('departement'),
     commune: document.getElementById('commune'),
-    //zs: document.getElementById('zs'),
-    zsDisplay: document.getElementById('zs_display'),
+    zs: document.getElementById('zs'),
     zd: document.getElementById('zd'),
     codeAgent: document.getElementById('code_agent'),
     refreshBtn: document.getElementById('refreshAll')
@@ -746,20 +742,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loader) loader.style.display = 'none';
   };
 
-  function renderZsDisplay(data) {
-  if (!selects.zsDisplay) return;
-
-  if (!data || data.length === 0) {
-    selects.zsDisplay.value = '';
-    return;
-  }
-
-  const values = data
-    .map(item => item.mo_zs)
-    .filter(Boolean);
-
-  selects.zsDisplay.value = values.join(' | ');
-}
 
   function debounce(fn, delay = 200) {
     let timeout;
@@ -1061,50 +1043,79 @@ async function updateStats() {
     });
   }
 
+  function populateZsSelect(zsData) {
+            const zsSelect = document.getElementById('zs');
+            if (!zsSelect) return;
+            zsSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+            if (zsData && zsData.length) {
+                zsData.forEach(zs => {
+                    const option = new Option(zs.mo_zs, zs.mo_zs);
+                    zsSelect.appendChild(option);
+                });
+                zsSelect.disabled = false;
+            } else {
+                zsSelect.disabled = true;
+            }
+        }
+
   if (isActiveSelect(selects.commune)) {
     selects.commune.addEventListener('change', async (e) => {
-      console.log('🔘 Commune changée:', e.target.value);
-      
-      // Réinitialiser ZD
-      if (isActiveSelect(selects.zd)) {
-        selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
-        selects.zd.disabled = false;
-      }
+  console.log('🔘 Commune changée:', e.target.value);
+  
+  // Réinitialiser ZS et ZD
+  if (isActiveSelect(selects.zs)) {
+    selects.zs.innerHTML = '<option value="">-- Sélectionner --</option>';
+    selects.zs.disabled = false;
+  }
+  if (isActiveSelect(selects.zd)) {
+    selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
+    selects.zd.disabled = false;
+  }
+  if (selects.codeAgent) selects.codeAgent.value = '';
 
-      // Réinitialiser le code agent quand commune change
-      if (selects.codeAgent) selects.codeAgent.value = '';
-
-      if (selects.zsDisplay) {
-        selects.zsDisplay.value = '';
-        }
-
-      if (selects.commune.value) {
-        console.log('📥 Chargement ZS pour commune:', selects.commune.value);
-
-        const response = await fetch(`/api/location/zs?commune=${selects.commune.value}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const zsData = await response.json();
-
-        console.log('✅ ZS chargées pour commune', selects.commune.value, ':', zsData);
-        renderZsDisplay(zsData);
-
-        console.log('📥 Chargement ZDs pour commune:', selects.commune.value);
-        await loadOptions(
-            `/api/location/zds?commune=${selects.commune.value}`,
-            selects.zd,
-            'mo_zd',
-            'mo_zd'
-        );
-        }
-      
-      debouncedUpdateStats();
-    });
+  if (selects.commune.value) {
+    console.log('📥 Chargement ZS pour commune:', selects.commune.value);
+    try {
+      const response = await fetch(`/api/location/zs?commune=${selects.commune.value}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const zsData = await response.json();
+      console.log('✅ ZS chargées:', zsData);
+      populateZsSelect(zsData);
+    } catch (err) {
+      console.error('❌ Erreur chargement ZS:', err);
+      populateZsSelect([]);
+    }
+  } else {
+    populateZsSelect([]);
+  }
+  
+  debouncedUpdateStats();
+});
   }
 
   if (isActiveSelect(selects.zs)) {
   selects.zs.addEventListener('change', async (e) => {
-    console.log('🔘 ZS changée (sans impact stats):', e.target.value);
-    // ✅ aucun updateStats ici
+    console.log('🔘 ZS changée:', e.target.value);
+    
+    // Réinitialiser ZD et agent
+    if (isActiveSelect(selects.zd)) {
+      selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
+      selects.zd.disabled = false;
+    }
+    if (selects.codeAgent) selects.codeAgent.value = '';
+
+    if (selects.zs.value) {
+      console.log('📥 Chargement ZD pour ZS:', selects.zs.value);
+      await loadOptions(
+          `/api/location/zds?zs=${encodeURIComponent(selects.zs.value)}`,
+          selects.zd,
+          'mo_zd',
+          'mo_zd'
+      );
+    }
+    
+    // Ne pas appeler updateStats ici car la ZS n'affecte pas les stats
+    // debouncedUpdateStats();  // ← commenté ou supprimé
   });
 }
 

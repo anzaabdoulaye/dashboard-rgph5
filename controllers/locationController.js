@@ -102,25 +102,59 @@ exports.getZs = async (req, res) => {
 };
 
 // GET /zds
-exports.getZds = async (req, res) => {
+/* exports.getZds = async (req, res) => {
   try {
-    const commune = req.query.commune || '';
+    //const commune = req.query.commune || '';
+    const zs = req.query.zs || '';
     const user = req.session.user;
     const userId = user ? `${user.id}_${user.role}` : 'public';
-    const cacheKey = getCacheKey(`zds:${commune}`, userId);
+    //const cacheKey = getCacheKey(`zds:${commune}`, userId);
+    const cacheKey = getCacheKey(`zds:${zs}`, userId);
 
     if (selectsCache[cacheKey]) {
       console.log(`✅ Cache hit: ${cacheKey}`);
       return res.json(selectsCache[cacheKey]);
     }
 
-    const zds = await menageService.getZds(commune, user);
+    //const zds = await menageService.getZds(commune, user);
+    const zds = await menageService.getZds(zs, user);
     selectsCache[cacheKey] = zds;
     setTimeout(() => delete selectsCache[cacheKey], 10 * 60 * 1000);
 
     res.json(zds);
   } catch (err) {
     console.error('❌ Erreur getZds:', err);
+    res.status(500).json({ error: err.message });
+  }
+}; */
+
+// GET /zds
+exports.getZdsByZs = async (req, res) => {
+  try {
+    const zs = req.query.zs || '';
+    const user = req.session.user;
+
+    if (!zs) {
+      return res.json([]); // pas de ZS → pas de ZD
+    }
+
+    const userId = user ? `${user.id}_${user.role}` : 'public';
+    const cacheKey = getCacheKey(`zds_by_zs:${zs}`, userId);
+
+    if (selectsCache[cacheKey]) {
+      console.log(`✅ Cache hit: ${cacheKey}`);
+      return res.json(selectsCache[cacheKey]);
+    }
+
+    // ✅ Appel correct à la méthode du service
+    const zds = await menageService.getZdsByZs(zs, user);
+
+    selectsCache[cacheKey] = zds;
+    setTimeout(() => delete selectsCache[cacheKey], 10 * 60 * 1000);
+
+    res.json(zds);
+  } catch (err) {
+    console.error('❌ Erreur getZdsByZs:', err);
     res.status(500).json({ error: err.message });
   }
 };

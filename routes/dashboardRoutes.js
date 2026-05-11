@@ -46,7 +46,7 @@ router.get('/api/location/regions', requireAuth, locationController.getRegions);
 router.get('/api/location/departements', requireAuth, locationController.getDepartements);
 router.get('/api/location/communes', requireAuth, locationController.getCommunes);
 router.get('/api/location/zs', requireAuth, locationController.getZs); 
-router.get('/api/location/zds', requireAuth, locationController.getZds);
+router.get('/api/location/zds', requireAuth, locationController.getZdsByZs);
 
 // Stats JSON
 router.get('/stats', requireAuth, dashboardController.getStats);

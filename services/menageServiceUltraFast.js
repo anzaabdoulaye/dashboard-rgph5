@@ -503,7 +503,7 @@ async function getCommunes(departement, user = null) {
   }, CACHE_TTL.SELECTS);
 }
 
-async function getZds(commune, user = null) {
+/* async function getZds(commune, user = null) {
   const userRole = user ? (Array.isArray(user.roles) ? user.roles[0] : user.role) : null;
   const hasRestriction = user && user.code && userRole === 'ROLE_COMMUNAL';
   
@@ -527,7 +527,33 @@ async function getZds(commune, user = null) {
     sql += ` ORDER BY mo_zd ASC`;
     return await menageDB.query(sql, { replacements, type: QueryTypes.SELECT });
   }, CACHE_TTL.SELECTS);
+} */
+
+async function getZdsByZs(zs, user = null) {
+  if (!zs) return [];
+
+  const cacheKey = `zds:zs${zs}:u${user?.id}`;
+
+  return await cacheHelper.getOrSet(cacheKey, async () => {
+
+    const sql = `
+      SELECT DISTINCT TRIM(mo_zd) AS mo_zd
+      FROM level1
+      WHERE mo_zd IS NOT NULL
+        AND TRIM(mo_zd) <> ''
+        AND LEFT(TRIM(mo_zd), 7) = :zs
+      ORDER BY mo_zd ASC
+    `;
+
+    return await menageDB.query(sql, {
+      replacements: { zs },
+      type: QueryTypes.SELECT
+    });
+
+  }, CACHE_TTL.SELECTS);
 }
+
+
 
 /**
  * Récupère les agents (codes) associés à une ZD donnée
@@ -565,6 +591,6 @@ module.exports = {
   getDepartements,
   getCommunes,
   getZs,
-  getZds,
+  getZdsByZs,
   getAgentsByZd
 };
