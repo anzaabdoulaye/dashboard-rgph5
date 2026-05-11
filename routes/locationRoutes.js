@@ -14,9 +14,10 @@ router.get('/departements', requireAuth, locationController.getDepartements);
 router.get('/communes', requireAuth, locationController.getCommunes);
 
 router.get('/zs', requireAuth, locationController.getZs);
+router.get('/zds', requireAuth, locationController.getZdsByZs);
 
 // Récupérer les ZD d'une commune (avec restrictions)
-exports.getZs = async (req, res) => {
+/* exports.getZs = async (req, res) => {
   try {
     const commune = req.query.commune || '';
     const user = req.session.user;
@@ -47,7 +48,7 @@ exports.getZs = async (req, res) => {
     console.error('❌ Erreur getZs:', err);
     return res.status(500).json({ error: err.message });
   }
-};
+}; */
 
 // Récupérer les agents associés à une ZD (depuis user_zd)
 router.get('/agents-by-zd', requireAuth, locationController.getAgentsByZd);

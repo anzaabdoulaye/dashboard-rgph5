@@ -407,11 +407,11 @@ console.log('[showDashboard] raw query =', req.query);
     }
 
     // 8. Charger les listes de filtres selon le rôle et les filtres déjà sécurisés
-    const [regions, departements, communes, zds] = await Promise.all([
+    const [regions, departements, communes, zss] = await Promise.all([
       menageService.getRegions(user),
       menageService.getDepartements(filters.region, user),
       menageService.getCommunes(filters.departement, user),
-      menageService.getZds(filters.commune, user)
+      menageService.getZs(filters.commune, user)
     ]);
 
     // 9. Préparer les indicateurs utilisateur pour la vue
@@ -451,7 +451,8 @@ console.log('[showDashboard] raw query =', req.query);
         regions: prepareSelectOptions(regions, 'region', filters.region, user),
         departements: prepareSelectOptions(departements, 'departement', filters.departement, user),
         communes: prepareSelectOptions(communes, 'commune', filters.commune, user),
-        zds: prepareSelectOptions(zds, 'zd', filters.zd, user)
+        //zds: prepareSelectOptions(zds, 'zd', filters.zd, user)
+        zss: prepareSelectOptions(zss, 'zs', filters.zs, user),
       },
       filters,
       user: userFlags
@@ -477,6 +478,7 @@ exports.getStats = async (req, res) => {
       region: req.query.region,
       departement: req.query.departement,
       commune: req.query.commune,
+      zs: req.query.zs || null,
       zd: req.query.zd
     };
     let cleanedFilters = cleanFilters(filters);
@@ -580,12 +582,12 @@ exports.showCharts = async (req, res) => {
     }
 
     // Sélects pour filtres AVEC restriction par rôle
-    const [regions, departements, communes, zds] = await Promise.all([
-      menageService.getRegions(user),
-      menageService.getDepartements(filters.region, user),
-      menageService.getCommunes(filters.departement, user),
-      menageService.getZds(filters.commune, user)
-    ]);
+    const [regions, departements, communes, zss] = await Promise.all([
+  menageService.getRegions(user),
+  menageService.getDepartements(filters.region, user),
+  menageService.getCommunes(filters.departement, user),
+  menageService.getZs(filters.commune, user)   // retourne les ZS
+]);
 
     const userFlags = {
       ...user,
