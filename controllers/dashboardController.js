@@ -619,7 +619,8 @@ exports.showCharts = async (req, res) => {
         regions: prepareSelectOptions(regions, 'region', filters.region, user),
         departements: prepareSelectOptions(departements, 'departement', filters.departement, user),
         communes: prepareSelectOptions(communes, 'commune', filters.commune, user),
-        zds: prepareSelectOptions(zds, 'zd', filters.zd, user)
+       // zds: prepareSelectOptions(zds, 'zd', filters.zd, user),
+        zss: prepareSelectOptions(zss, 'zs', filters.zs, user),
       },
       filters,
       user: userFlags
