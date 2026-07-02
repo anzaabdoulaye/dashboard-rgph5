@@ -83,11 +83,21 @@
                     </div>
 
                     <div class="col-3">
-                        <label>Zone de dénombrement (ZD)</label>
-                        <select id="zd" class="form-select">
-                            <option value="">-- Sélectionner --</option>
-                        </select>
-                    </div>
+    <label>ZS</label>
+
+    <select id="zs" class="form-select">
+        <option value="">-- Sélectionner --</option>
+    </select>
+</div>
+  
+    <!-- ZD -->
+    <div class="col-3">
+      <label>ZD</label>
+      <!-- TOUS les rôles peuvent changer de ZD -->
+      <select id="zd" class="form-select">
+        <option value="">-- Sélectionner --</option>
+      </select>
+    </div>
                 </div>
             </div>
         </div>
@@ -160,6 +170,7 @@
             region: document.getElementById('region'),
             departement: document.getElementById('departement'),
             commune: document.getElementById('commune'),
+            zs: document.getElementById('zs'),
             zd: document.getElementById('zd')
         };
         
@@ -525,6 +536,7 @@ function updatePopCollectéVsCartoRegion(dataArray) {
             selects.region.addEventListener('change', async () => {
                 if (isActiveSelect(selects.departement)) selects.departement.innerHTML = '<option value="">-- Sélectionner --</option>';
                 if (isActiveSelect(selects.commune)) selects.commune.innerHTML = '<option value="">-- Sélectionner --</option>';
+                if (isActiveSelect(selects.zs)) selects.zs.innerHTML = '<option value="">-- Sélectionner --</option>'; 
                 if (isActiveSelect(selects.zd)) selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
 
                 if (selects.region.value) {
@@ -538,6 +550,7 @@ function updatePopCollectéVsCartoRegion(dataArray) {
         if (isActiveSelect(selects.departement)) {
             selects.departement.addEventListener('change', async () => {
                 if (isActiveSelect(selects.commune)) selects.commune.innerHTML = '<option value="">-- Sélectionner --</option>';
+                 if (isActiveSelect(selects.zs)) selects.zs.innerHTML = '<option value="">-- Sélectionner --</option>';
                 if (isActiveSelect(selects.zd)) selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
 
                 if (selects.departement.value) {
@@ -549,16 +562,54 @@ function updatePopCollectéVsCartoRegion(dataArray) {
         }
 
         if (isActiveSelect(selects.commune)) {
-            selects.commune.addEventListener('change', async () => {
-                if (isActiveSelect(selects.zd)) selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
-
-                if (selects.commune.value) {
-                    await loadOptions(`/api/location/zds?commune=${selects.commune.value}`, 
-                                      selects.zd, 'mo_zd', 'mo_zd');
-                }
-                debouncedUpdateCharts();
-            });
+    selects.commune.addEventListener('change', async () => {
+        // Réinitialiser les niveaux inférieurs
+        if (isActiveSelect(selects.zs)) {
+            selects.zs.innerHTML = '<option value="">-- Sélectionner --</option>';
+            selects.zs.disabled = false;
         }
+        if (isActiveSelect(selects.zd)) {
+            selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
+            selects.zd.disabled = false;
+        }
+
+        if (selects.commune.value) {
+            console.log('📥 Chargement ZS pour commune:', selects.commune.value);
+            await loadOptions(
+                `/api/location/zs?commune=${selects.commune.value}`,
+                selects.zs,
+                'mo_zs',
+                'mo_zs'
+            );
+        }
+        // Mettre à jour les graphiques avec ZD vide (données au niveau commune)
+        debouncedUpdateCharts();
+    });
+}
+
+
+if (isActiveSelect(selects.zs)) {
+    selects.zs.addEventListener('change', async () => {
+        console.log('🔘 ZS changée:', selects.zs.value);
+        
+        // Réinitialiser ZD
+        if (isActiveSelect(selects.zd)) {
+            selects.zd.innerHTML = '<option value="">-- Sélectionner --</option>';
+            selects.zd.disabled = false;
+        }
+
+        if (selects.zs.value) {
+            console.log('Chargement ZD pour ZS:', selects.zs.value);
+            await loadOptions(
+                `/api/location/zds?zs=${encodeURIComponent(selects.zs.value)}`,
+                selects.zd,
+                'mo_zd',
+                'mo_zd'
+            );
+        }
+        // Ne pas appeler updateCharts ici, car ZD n'a pas encore changé
+    });
+}
 
         if (isActiveSelect(selects.zd)) {
             selects.zd.addEventListener('change', () => debouncedUpdateCharts());
@@ -593,6 +644,19 @@ function updatePopCollectéVsCartoRegion(dataArray) {
                                        selects.commune, 'code_commune', 'commune');
                      if (communeCode) selects.commune.value = communeCode;
                 }
+
+                
+                 // --- AJOUT : Charger les ZS si une commune est sélectionnée ---
+        if (communeCode && isActiveSelect(selects.zs)) {
+            await loadOptions(
+                `/api/location/zs?commune=${communeCode}`,
+                selects.zs,
+                'mo_zs',
+                'mo_zs'
+            );
+            // Optionnel : si une ZS est pré-sélectionnée (ex: via user.defaultZs), la définir ici
+            // if (user.defaultZs) selects.zs.value = user.defaultZs;
+        }
 
                 if (communeCode && isActiveSelect(selects.zd)) {
                      await loadOptions(`/api/location/zds?commune=${communeCode}`, 

@@ -541,7 +541,7 @@ async function getZdsByZs(zs, user = null) {
       FROM level1
       WHERE mo_zd IS NOT NULL
         AND TRIM(mo_zd) <> ''
-        AND LEFT(TRIM(mo_zd), 7) = :zs
+        AND TRIM(mo_zs) = :zs  
       ORDER BY mo_zd ASC
     `;
 
