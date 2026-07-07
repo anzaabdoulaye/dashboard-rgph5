@@ -496,19 +496,20 @@ exports.getStats = async (req, res) => {
     // C'est crucial car showDashboard peut avoir rempli le cache partiellement (sans pyramide)
     const cachedData = statsCache[cacheKey];
     
-    if (cachedData && cachedData.pyramideAges && cachedData.populationStats) {
+    if (cachedData && cachedData.pyramideAges && cachedData.populationStats && cachedData.evolution) {
       console.log(`📦 Cache HIT (API Stats) - Clé: ${cacheKey}`);
       stats = cachedData;
     } else {
       console.log(`🔄 Cache MISS ou INCOMPLET (Recalcul total) - Clé: ${cacheKey}`);
       
-      const [mainStats, populationStats, proportionAgricoles, averageEmigres, pyramideAges, regionStats] = await Promise.all([
+      const [mainStats, populationStats, proportionAgricoles, averageEmigres, pyramideAges, regionStats,evolution] = await Promise.all([
         menageService.getMainStats(finalFilters, user),
         menageService.getPopulationStatsCombined(finalFilters, user),
         menageService.getProportionMenagesAgricoles(finalFilters, user),
         menageService.getAverageEmigresPerMenage(finalFilters, user),
         menageService.getPyramideAges(finalFilters, user),
-        menageService.getPopulationByRegion()
+        menageService.getPopulationByRegion(),
+        menageService.getEvolutionCollecte(finalFilters, user) 
       ]);
 
       stats = {
@@ -517,7 +518,8 @@ exports.getStats = async (req, res) => {
         proportionAgricoles,
         averageEmigres,
         pyramideAges,
-        regionStats
+        regionStats,
+        evolution 
       };
 
       // Mise à jour du cache
@@ -569,11 +571,12 @@ exports.showCharts = async (req, res) => {
       ({ mainStats, populationStats, pyramideAges} = chartsCache[cacheKey]);
     } else {
       // Requêtes SQL lourdes en parallèle AVEC l'utilisateur
-      [mainStats, populationStats, pyramideAges, regionStats] = await Promise.all([
+      [mainStats, populationStats, pyramideAges, regionStats, evolution] = await Promise.all([
         menageService.getMainStats(filters, user),
         menageService.getPopulationStatsCombined(filters, user),
         menageService.getPyramideAges(filters, user),
-        menageService.getPopulationByRegion()
+        menageService.getPopulationByRegion(),
+        menageService.getEvolutionCollecte(filters, user) 
       ]);
 
       // Stocker dans le cache
@@ -630,6 +633,90 @@ exports.showCharts = async (req, res) => {
     res.status(500).send('Erreur serveur');
   }
 };
+
+// Page Vue Globale
+exports.showVueGlobale = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect('/auth/login');
+    }
+
+    const user = req.session.user;
+    let filters = {
+      region: req.query.region || null,
+      departement: req.query.departement || null,
+      commune: req.query.commune || null,
+      zd: req.query.zd || null
+    };
+
+    // Initialisation des filtres selon le rôle
+    filters = initializeFiltersForRole(user, filters);
+
+    // Validation des filtres
+    if (!hasAccessToFilters(user, filters)) {
+      filters.region = getUserDefaultRegion(user);
+      filters.departement = getUserDefaultDepartement(user);
+      filters.commune = getUserDefaultCommune(user);
+      filters.zd = null;
+    }
+
+    const cacheKey = getCacheKey(filters, user);
+
+    let mainStats, populationStats, pyramideAges;
+
+    if (chartsCache[cacheKey]) {
+      ({ mainStats, populationStats, pyramideAges} = chartsCache[cacheKey]);
+    } else {
+      // Requêtes SQL lourdes en parallèle AVEC l'utilisateur
+      [mainStats, populationStats, pyramideAges, regionStats, evolution] = await Promise.all([
+        menageService.getMainStats(filters, user),
+        menageService.getPopulationStatsCombined(filters, user),
+        menageService.getPyramideAges(filters, user),
+        menageService.getPopulationByRegion(),
+        menageService.getEvolutionCollecte(filters, user) 
+      ]);
+
+      // Stocker dans le cache
+      chartsCache[cacheKey] = { mainStats, populationStats, pyramideAges };
+      setTimeout(() => delete chartsCache[cacheKey], 5 * 60 * 1000);
+    }
+
+    // Sélects pour filtres AVEC restriction par rôle
+    const [regions, departements, communes, zss] = await Promise.all([
+  menageService.getRegions(user),
+  menageService.getDepartements(filters.region, user),
+  menageService.getCommunes(filters.departement, user),
+  menageService.getZs(filters.commune, user)   // retourne les ZS
+]);
+
+    const userFlags = {
+      ...user,
+      isGlobal: user.role === 'ROLE_GLOBAL',
+      isRegional: user.role === 'ROLE_REGIONAL',
+      isDepartemental: user.role === 'ROLE_DEPARTEMENTAL',
+      isCommunal: user.role === 'ROLE_COMMUNAL',
+      
+      // Déterminer quels sélecteurs doivent être modifiables
+      canChangeRegion: user.role === 'ROLE_GLOBAL',
+      canChangeDepartement: ['ROLE_GLOBAL', 'ROLE_REGIONAL'].includes(user.role),
+      canChangeCommune: ['ROLE_GLOBAL', 'ROLE_REGIONAL', 'ROLE_DEPARTEMENTAL'].includes(user.role),
+      canChangeZD: true,
+      
+      // Valeurs présélectionnées
+      preselectedRegion: getUserDefaultRegion(user),
+      preselectedDepartement: getUserDefaultDepartement(user),
+      preselectedCommune: getUserDefaultCommune(user)
+    };
+
+    res.render('pages/vue_globale', {
+
+    });
+  } catch (err) {
+    console.error('Erreur vueGlobale:', err);
+    res.status(500).send('Erreur serveur');
+  }
+};
+
 
 exports.dashboard = (req, res, next) => {
   try {
