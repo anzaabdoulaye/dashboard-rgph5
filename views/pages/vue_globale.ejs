@@ -9,155 +9,66 @@
   z-index: 9999;
   justify-content: center;
   align-items: center;
+  opacity: 0.5;
 ">
+  <div style="text-align: center;">
     <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-        <span class="visually-hidden">Chargement...</span>
+      <span class="visually-hidden">Chargement...</span>
     </div>
+    <div style="margin-top: 10px; font-weight: bold;">Chargement...</div>
+  </div>
 </div>
+
 
 <div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
-            <h4 class="mb-sm-0">Graphiques du RGPH-5</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item active">Visualisation</li>
-                </ol>
-            </div>
-        </div>
-    </div>
+<div class="col-12">
+	<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+		<h4 class="mb-sm-0">Tableau de bord du RGPH-5</h4>
+		<div class="page-title-right">
+			<ol class="breadcrumb m-0">
+				<li class="breadcrumb-item active">Vue globale</li>
+			</ol>
+		</div>
 
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent p-3 rounded shadow-sm">
-            <div class="row g-3 w-100">
-                <div class="row">
-                    <div class="col-3">
-                        <label>Région</label>
-                        <% if (user.canChangeRegion) { %>
-                            <select id="region" class="form-select">
-                                <option value="">NATIONAL</option>
-                                <% selects.regions.forEach(region => { %>
-                                    <option value="<%= region.code_region %>"><%= region.region %></option>
-                                <% }); %>
-                            </select>
-                        <% } else { %>
-                            <% const defaultRegion = user.defaultRegion || selects.regions[0]?.code_region || ''; %>
-                            <% const defaultRegionName = selects.regions[0]?.region || 'Région non disponible'; %>
-                            <input type="hidden" id="region" value="<%= defaultRegion %>">
-                            <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-                                <%= defaultRegionName %>
-                            </div>
-                        <% } %>
-                    </div>
-
-                    <div class="col-3">
-                        <label>Département</label>
-                        <% if (user.canChangeDepartement) { %>
-                            <select id="departement" class="form-select">
-                                <option value="">-- Sélectionner --</option>
-                            </select>
-                        <% } else { %>
-                            <% const defaultDept = user.defaultDepartement || selects.departements[0]?.code_departement || ''; %>
-                            <% const defaultDeptName = selects.departements[0]?.departement || 'Département non disponible'; %>
-                            <input type="hidden" id="departement" value="<%= defaultDept %>">
-                            <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-                                <%= defaultDeptName %>
-                            </div>
-                        <% } %>
-                    </div>
-
-                    <div class="col-3">
-                        <label>Commune</label>
-                        <% if (user.canChangeCommune) { %>
-                            <select id="commune" class="form-select">
-                                <option value="">-- Sélectionner --</option>
-                            </select>
-                        <% } else { %>
-                            <% const defaultCommune = user.defaultCommune || selects.communes[0]?.code_commune || ''; %>
-                            <% const defaultCommuneName = selects.communes[0]?.commune || 'Commune non disponible'; %>
-                            <input type="hidden" id="commune" value="<%= defaultCommune %>">
-                            <div class="form-control-plaintext" style="padding:0.5rem; border:1px solid #ddd; background:#f8f9fa;">
-                                <%= defaultCommuneName %>
-                            </div>
-                        <% } %>
-                    </div>
-
-                    <div class="col-3">
-    <label>ZS</label>
-
-    <select id="zs" class="form-select">
-        <option value="">-- Sélectionner --</option>
-    </select>
-</div>
-  
-    <!-- ZD -->
-    <div class="col-3">
-      <label>ZD</label>
-      <!-- TOUS les rôles peuvent changer de ZD -->
-      <select id="zd" class="form-select">
-        <option value="">-- Sélectionner --</option>
-      </select>
-    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+	</div>
+<div class="row" id="regionCardsContainer">
+    <!-- Les cartes sont générées dynamiquement -->
 </div>
 
+    <!-- Nouvelle ligne pour le graphique d'évolution -->
 <div class="row mt-4">
-    <div class="col-xl-6">
+    <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0">PYRAMIDE DES ÂGES</h4>
+                <h4 class="card-title mb-0">Évolution de la collecte (cumul journalier)</h4>
             </div>
             <div class="card-body">
                 <div style="height: 400px;">
-                    <canvas id="chartPyramide"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-6">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">RÉPARTITION PAR SEXE</h4>
-            </div>
-            <div class="card-body">
-                <div style="height: 400px; display: flex; justify-content: center;">
-                    <canvas id="genderChart"></canvas>
+                    <canvas id="evolutionChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-xl-6">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">PROGRESSION DE LA COLLECTE</h4>
-            </div>
-            <div class="card-body">
-                <div style="height: 350px; display: flex; justify-content: center;">
-                    <canvas id="popChartPie"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    <% if (chartAccess.showChartGlobal) { %>
-    <div class="col-xl-6">
-		<div class="card">
-			<div class="card-header">
-				<h4 class="card-title mb-0">Population collectée vs cartographiée par région</h4>
-			</div>
-			<div class="card-body pie-container" style="width: 100%; min-height: 300px;">
-                <canvas id="popChartBarRegions"></canvas>
-            </div>
-		</div>
-	</div>
-    <% } %>
 </div>
+
+<style>
+    .map-container {
+        height: 400px;
+        width: 100%;
+        border-radius: 6px;
+        z-index: 1;
+    }
+    
+    .map-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+</style>
+
+<!-- end col --></div><!-- end row -->
 
 <script src="assets/libs/chart.js/chart.umd.js"></script>
 
@@ -174,7 +85,7 @@
             zd: document.getElementById('zd')
         };
         
-        let charts = { pyramide: null, gender: null, progression: null,barRegions: null };
+        let charts = { pyramide: null, gender: null, progression: null, barRegions: null, evolution: null };
         const isActiveSelect = (element) => element && element.tagName === 'SELECT';
 
         const getSelectValue = (elementId) => {
@@ -268,6 +179,48 @@
             }
         }
 
+        // Récupération des données (déjà présente)
+fetch('/stats?region=...&departement=...')
+  .then(response => response.json())
+  .then(data => {
+    const evolution = data.evolution; // tableau trié par date
+    
+    const labels = evolution.map(item => item.date);
+    const cumulMenages = evolution.map(item => item.cumulMenages);
+    const cumulPopulation = evolution.map(item => item.cumulPopulation);
+    
+    const ctx = document.getElementById('evolutionChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Ménages cumulés',
+            data: cumulMenages,
+            borderColor: 'blue',
+            fill: false,
+            tension: 0.1
+          },
+          {
+            label: 'Population cumulée',
+            data: cumulPopulation,
+            borderColor: 'green',
+            fill: false,
+            tension: 0.1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Date' } },
+          y: { title: { display: true, text: 'Cumul' } }
+        }
+      }
+    });
+  });
+
         async function updateCharts() {
             showLoader();
             try {
@@ -297,6 +250,8 @@
                     updateGenderChart(data.populationStats || {});
                     updateProgressionChart(data.mainStats || {});
                     updatePopCollectéVsCartoRegion(regiProg);
+                    updateEvolutionChart(data.evolution || []);
+                    updateRegionCards(data.regionStats || []);
                 }
             } catch (err) {
                 console.error('Erreur updateCharts:', err);
@@ -426,10 +381,9 @@
             const carto = stats.cartographie || 0;
             const restant = Math.max(0, carto - collectee);
             const pCt = carto > 0 ? ((collectee / carto) * 100).toFixed(1) : 0;
-            const pRAF = carto > 0 ? ((restant / carto) * 100).toFixed(1) : 0;
 
             if (charts.progression) {
-                charts.progression.data.labels = [`Collectée (${pCt}%)`, `Reste à faire (${pRAF}%)`];
+                charts.progression.data.labels = [`Collectée (${pCt}%)`, 'Reste à faire'];
                 charts.progression.data.datasets[0].data = [collectee, restant];
                 charts.progression.update();
             } else {
@@ -449,6 +403,52 @@
                 });
             }
         }
+
+        // Mise à jour des cartes par région
+function updateRegionCards(regionData) {
+    const container = document.getElementById('regionCardsContainer');
+    if (!container) return;
+    container.innerHTML = ''; // vider le conteneur
+
+    if (!Array.isArray(regionData) || regionData.length === 0) {
+        container.innerHTML = '<div class="col-12"><p class="text-muted">Aucune donnée régionale disponible.</p></div>';
+        return;
+    }
+
+    // Tri par collectée décroissante (optionnel)
+    const sorted = [...regionData].sort((a, b) => (b.collectee || 0) - (a.collectee || 0));
+
+    sorted.forEach(region => {
+        const collectee = Number(region.collectee) || 0;
+        const carto = Number(region.carto) || 0;
+        const pourcent = carto > 0 ? ((collectee / carto) * 100).toFixed(1) : 0;
+
+        // Formatage en milliers (ex: 559.25k)
+        const formatted = (collectee / 1000).toFixed(2) + 'k';
+
+        // Création de la carte
+        const card = document.createElement('div');
+        card.className = 'col-xl-2 col-md-2';
+        card.innerHTML = `
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-0">${region.region}</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">${collectee}</h4>
+                            <span class="badge bg-${pourcent >= 80 ? 'success' : pourcent >= 50 ? 'warning' : 'danger'}">${pourcent}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
         
         // Remplacez la fonction updatePopCollectéVsCartoRegion par ceci :
 
@@ -525,6 +525,83 @@ function updatePopCollectéVsCartoRegion(dataArray) {
                         label: function (context) {
                             // Formatage des milliers
                             return context.dataset.label + ": " + Number(context.raw).toLocaleString('fr-FR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// D. Évolution cumulative (courbe)
+function updateEvolutionChart(evolutionData) {
+    const ctx = document.getElementById("evolutionChart");
+    if (!ctx) return;
+
+    // Nettoyer toute instance Chart existante sur ce canvas
+    let existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
+        existingChart = null;
+    }
+
+    // Si aucune donnée, on arrête (le canvas est propre)
+    if (!Array.isArray(evolutionData) || evolutionData.length === 0) {
+        console.warn("⚠️ Aucune donnée d'évolution disponible");
+        return;
+    }
+
+    // Extraire les labels (dates) et les cumuls
+    const labels = evolutionData.map(item => item.date);
+    const cumulMenages = evolutionData.map(item => item.cumulMenages);
+    const cumulPopulation = evolutionData.map(item => item.cumulPopulation);
+
+    // Créer le nouveau graphique
+    charts.evolution = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Ménages cumulés',
+                    data: cumulMenages,
+                    borderColor: '#12A537',
+                    backgroundColor: 'rgba(18, 165, 55, 0.1)',
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 2,
+                },
+                {
+                    label: 'Population cumulée',
+                    data: cumulPopulation,
+                    borderColor: '#F28F00',
+                    backgroundColor: 'rgba(242, 143, 0, 0.1)',
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 2,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Date' },
+                    grid: { display: false }
+                },
+                y: {
+                    title: { display: true, text: 'Cumul' },
+                    beginAtZero: true,
+                    grid: { display: true }
+                }
+            },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + Number(context.raw).toLocaleString('fr-FR');
                         }
                     }
                 }

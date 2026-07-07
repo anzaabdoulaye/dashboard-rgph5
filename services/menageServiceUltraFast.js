@@ -579,6 +579,74 @@ async function getAgentsByZd(zd) {
   }, CACHE_TTL.SELECTS);
 }
 
+
+/**
+ * Récupère l'évolution cumulative de la collecte par jour
+ * @param {Object} filters - { region, departement, commune, zd }
+ * @param {Object} user - utilisateur connecté (pour les restrictions)
+ * @returns {Array} [{ date, nbMenagesJour, populationJour, cumulMenages, cumulPopulation }]
+ */
+async function getEvolutionCollecte(filters = {}, user = null) {
+  const cacheKey = generateCacheKey('evolution_collecte', filters, user);
+  
+  return await cacheHelper.getOrSet(cacheKey, async () => {
+    const startTime = Date.now();
+    const replacements = buildReplacements(filters, user);
+    
+    // Construction de la clause WHERE dynamique
+    let whereClauses = [];
+    whereClauses.push("m.meta_intro = 1");  // ménages valides
+    whereClauses.push("m.xm11 IS NOT NULL");
+    whereClauses.push("m.xm11 != ''");
+    
+    if (replacements.region) {
+      whereClauses.push("m.code_region = :region");
+    }
+    if (replacements.departement) {
+      whereClauses.push("m.code_departement = :departement");
+    }
+    if (replacements.commune) {
+      whereClauses.push("m.code_commune = :commune");
+    }
+    if (replacements.zd) {
+      whereClauses.push("m.mo_zd = :zd");
+    }
+    
+    const whereSql = whereClauses.join(' AND ');
+    
+    const sql = `
+      SELECT 
+        DATE_FORMAT(STR_TO_DATE(m.xm11, '%d%m%Y'), '%Y-%m-%d') AS date_collecte,
+        COUNT(*) AS nb_menages_jour,
+        COALESCE(SUM(m.xm40), 0) AS population_jour
+      FROM tmenage m
+      WHERE ${whereSql}
+      GROUP BY date_collecte
+      ORDER BY date_collecte ASC
+    `;
+    
+    const rows = await menageDB.query(sql, { replacements, type: QueryTypes.SELECT });
+    
+    // Calcul des cumuls
+    let cumulMenages = 0;
+    let cumulPopulation = 0;
+    const result = rows.map(row => {
+      cumulMenages += Number(row.nb_menages_jour || 0);
+      cumulPopulation += Number(row.population_jour || 0);
+      return {
+        date: row.date_collecte,
+        nbMenagesJour: Number(row.nb_menages_jour || 0),
+        populationJour: Number(row.population_jour || 0),
+        cumulMenages,
+        cumulPopulation
+      };
+    });
+    
+    console.log(`⚡ getEvolutionCollecte exécutée en ${Date.now() - startTime}ms`);
+    return result;
+  }, CACHE_TTL.STATS); // 10 minutes
+}
+
 /* Export  */
 module.exports = {
   getMainStats,
@@ -592,5 +660,6 @@ module.exports = {
   getCommunes,
   getZs,
   getZdsByZs,
-  getAgentsByZd
+  getAgentsByZd,
+  getEvolutionCollecte
 };

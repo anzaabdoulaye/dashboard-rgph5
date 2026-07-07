@@ -39,6 +39,13 @@
                                <i class="ri-pie-chart-2-fill"></i> <span data-key="t-authentication">Graphiques</span>
                             </a>                           
                         </li>
+                        <% if (chartAccess.showChartGlobal) { %>
+                         <li class="nav-item">
+                            <a class="nav-link menu-link" href="/vue_globale">
+                               <i class="ri-pie-chart-2-fill"></i> <span data-key="t-authentication">Vue Globale</span>
+                            </a>                           
+                        </li>
+                        <% } %>
                          <li class="nav-item">
                             <a class="nav-link menu-link" href="/exports">
                                <i class="ri-bar-chart-2-fill"></i> <span data-key="t-authentication">Exports</span>

@@ -41,6 +41,9 @@ router.get('/', requireAuth,mapAuthorization, dashboardController.showDashboard)
 // Nouvelle page pour les graphiques
 router.get('/charts', requireAuth,dashboardController.showCharts);
 
+// Nouvelle page pour la vue globale
+router.get('/vue_globale', requireAuth,dashboardController.showVueGlobale);
+
 // AJAX selects - CORRECTION DES CHEMINS
 router.get('/api/location/regions', requireAuth, locationController.getRegions);
 router.get('/api/location/departements', requireAuth, locationController.getDepartements);
