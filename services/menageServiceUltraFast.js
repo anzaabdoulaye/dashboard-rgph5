@@ -598,6 +598,8 @@ async function getEvolutionCollecte(filters = {}, user = null) {
     whereClauses.push("m.meta_intro = 1");  // ménages valides
     whereClauses.push("m.xm11 IS NOT NULL");
     whereClauses.push("m.xm11 != ''");
+    // Ajout : exclure les dates invalides
+    whereClauses.push("STR_TO_DATE(m.xm11, '%Y%m%d') IS NOT NULL");
     
     if (replacements.region) {
       whereClauses.push("m.code_region = :region");
@@ -616,7 +618,7 @@ async function getEvolutionCollecte(filters = {}, user = null) {
     
     const sql = `
       SELECT 
-        DATE_FORMAT(STR_TO_DATE(m.xm11, '%d%m%Y'), '%Y-%m-%d') AS date_collecte,
+        DATE_FORMAT(STR_TO_DATE(m.xm11, '%Y%m%d'), '%Y-%m-%d') AS date_collecte,
         COUNT(*) AS nb_menages_jour,
         COALESCE(SUM(m.xm40), 0) AS population_jour
       FROM tmenage m
