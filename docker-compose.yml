@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Service de Base de Données MySQL
+  db:
+    image: mysql:8.0
+    container_name: rgph5_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: rgph5_db
+      MYSQL_USER: rgph_user
+      MYSQL_PASSWORD: rgph_password
+    volumes:
+      # C'est ici que la magie opère ! 
+      # Docker va chercher votre fichier "init.sql" à la racine et l'exécuter 
+      # UNIQUEMENT lors de la première création du conteneur.
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Volume pour persister les données même si le conteneur est redémarré
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    # Optionnel, selon la version du client MySQL dans Node.js
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Service de Cache Redis
+  cache:
+    image: redis:6-alpine
+    container_name: rgph5_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  # Votre Application Node.js (Dashboard)
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: rgph5_app
+    restart: unless-stopped
+    ports:
+      - "8071:8071" # Le port exposé aux apprenants
+    environment:
+      # ATTENTION : Remplacez les valeurs localhost par les noms des services (db, cache)
+      - NODE_ENV=production
+      - PORT=8071
+      - DB_HOST=db      # Pointe vers le service MySQL défini plus haut
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=
+      - DB_NAME=rgph5_db
+      - REDIS_HOST=cache # Pointe vers le service Redis défini plus haut
+      - REDIS_PORT=6379
+      # Si votre application nécessite d'autres variables (ex: SESSION_SECRET), ajoutez-les ici.
+    depends_on:
+      - db
+      - cache
+
+# Déclaration du volume persistant
+volumes:
+  db_data:
