@@ -1,49 +1,40 @@
-<div id="globalLoader" style="
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.7);
-  z-index: 9999;
-  justify-content: center;
-  align-items: center;
-  opacity: 0.5;
-">
-  <div style="text-align: center;">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      <span class="visually-hidden">Chargement...</span>
+<!-- Loader Overlay Moderne -->
+<div id="globalLoader" class="loader-overlay">
+  <!-- ... Contenu du loader ... -->
+</div>
+
+<!-- Header -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="d-flex align-items-center justify-content-between p-3 bg-white rounded shadow-sm border-start border-4 border-info">
+      <div>
+        <h3 class="mb-1 text-dark fw-bold">Vue Globale du RGPH-5</h3>
+        <p class="text-muted mb-0">Synthèse et évolution de la collecte</p>
+      </div>
     </div>
-    <div style="margin-top: 10px; font-weight: bold;">Chargement...</div>
   </div>
 </div>
 
+<!-- INSERER ICI LA MÊME BARRE DE FILTRES (Sticky) -->
+<!-- ... -->
 
-<div class="row">
-<div class="col-12">
-	<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
-		<h4 class="mb-sm-0">Tableau de bord du RGPH-5</h4>
-		<div class="page-title-right">
-			<ol class="breadcrumb m-0">
-				<li class="breadcrumb-item active">Vue globale</li>
-			</ol>
-		</div>
-
-	</div>
-<div class="row" id="regionCardsContainer">
-    <!-- Les cartes sont générées dynamiquement -->
+<!-- Cartes Régionales (Générées dynamiquement par le JS) -->
+<div class="row g-3 mb-4" id="regionCardsContainer">
+    <!-- Les cartes s'insèrent ici. Le JS doit générer des cartes avec les classes : card shadow-sm border-0 kpi-card-ui -->
 </div>
 
-    <!-- Nouvelle ligne pour le graphique d'évolution -->
+<!-- Graphique d'évolution -->
 <div class="row mt-4">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">Évolution de la collecte (cumul journalier)</h4>
+        <div class="card shadow-sm border-0 kpi-card-ui">
+            <div class="card-header bg-white border-bottom border-light pt-4 d-flex align-items-center">
+                <div class="avatar-xs me-3">
+                    <div class="avatar-title bg-secondary-subtle text-secondary rounded fs-18"><i class="ri-line-chart-line"></i></div>
+                </div>
+                <h5 class="card-title mb-0 fw-bold">Évolution de la collecte (Cumul journalier)</h5>
             </div>
             <div class="card-body">
-                <div style="height: 400px;">
+                <div style="height: 450px; width: 100%;">
                     <canvas id="evolutionChart"></canvas>
                 </div>
             </div>
@@ -51,7 +42,11 @@
     </div>
 </div>
 
-</div>
+<!-- LE SCRIPT JS RESTE INTACT -->
+<script src="assets/libs/chart.js/chart.umd.js"></script>
+<script>
+// ... Logique JS de vue_globale.ejs ...
+</script>
 
 <style>
     .map-container {

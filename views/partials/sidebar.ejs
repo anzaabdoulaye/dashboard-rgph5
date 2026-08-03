@@ -1,56 +1,48 @@
-<div class="app-menu navbar-menu">
+<!-- Ajout de la classe rgph-sidebar pour surcharger le thème par défaut -->
+<div class="app-menu navbar-menu rgph-sidebar">
     <!-- LOGO -->
-    <div class="navbar-brand-box">
-        <a href="/" class="logo logo-dark">
-            <span class="logo-sm">
-                <img src="/assets/images/logo.png" alt="" height="22">
-            </span>
-            <span class="logo-lg">
-                <img src="/assets/images/logo.png" alt="" height="17">
-            </span>
-        </a>
-
+    <div class="navbar-brand-box sidebar-logo-box">
         <a href="/" class="logo logo-light">
             <span class="logo-sm">
-                <img src="/assets/images/logo.png" alt="" height="20">
+                <!-- Utilisez un logo blanc/clair ici si possible pour le contraste -->
+                <img src="/assets/images/logo.png" alt="Logo" height="22">
             </span>
             <span class="logo-lg">
-                <img src="/assets/images/logo.png" alt="" height="70">
+                <img src="/assets/images/logo.png" alt="Logo" height="45">
             </span>
         </a>
-        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
-            id="vertical-hover">
+        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover text-white" id="vertical-hover">
             <i class="ri-record-circle-line"></i>
         </button>
     </div>
 
     <div id="scrollbar">
-        <div class="container-fluid">
+        <div class="container-fluid pt-3">
             <ul class="navbar-nav" id="navbar-nav">
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Tableau de bord RGPH-5</span></li>
 
-                        <li class="nav-item">
-                            <a class="nav-link menu-link" href="/">
-                               <i class="ri-bar-chart-2-fill"></i> <span data-key="t-authentication">Indicateurs</span>
-                            </a>                           
-                        </li>
-                          <li class="nav-item">
-                            <a class="nav-link menu-link" href="/charts">
-                               <i class="ri-pie-chart-2-fill"></i> <span data-key="t-authentication">Graphiques</span>
-                            </a>                           
-                        </li>
-                        <% if (chartAccess.showChartGlobal) { %>
-                         <li class="nav-item">
-                            <a class="nav-link menu-link" href="/vue_globale">
-                               <i class="ri-pie-chart-2-fill"></i> <span data-key="t-authentication">Vue Globale</span>
-                            </a>                           
-                        </li>
-                        <% } %>
-                         <li class="nav-item">
-                            <a class="nav-link menu-link" href="/exports">
-                               <i class="ri-bar-chart-2-fill"></i> <span data-key="t-authentication">Exports</span>
-                            </a>                           
-                        </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="/">
+                        <i class="ri-dashboard-2-line"></i> <span data-key="t-authentication">Indicateurs</span>
+                    </a>                           
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="/charts">
+                        <i class="ri-pie-chart-line"></i> <span data-key="t-authentication">Graphiques</span>
+                    </a>                           
+                </li>
+                <% if (chartAccess.showChartGlobal) { %>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="/vue_globale">
+                        <i class="ri-earth-line"></i> <span data-key="t-authentication">Vue Globale</span>
+                    </a>                           
+                </li>
+                <% } %>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="/exports">
+                        <i class="ri-download-cloud-2-line"></i> <span data-key="t-authentication">Exports</span>
+                    </a>                           
+                </li>
             </ul>
         </div>
     </div>
@@ -58,3 +50,64 @@
 </div>
 
 <div class="vertical-overlay"></div>
+
+<!-- CSS SPÉCIFIQUE À LA SIDEBAR RGPH -->
+<style>
+    /* Fond de la sidebar avec un gradient vert profond */
+    .rgph-sidebar {
+        background: linear-gradient(180deg, #20be3d 0%, #20be3d 100%) !important;
+        border-right: none !important;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Zone du logo */
+    .sidebar-logo-box {
+        background: rgba(0, 0, 0, 0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Titres de menu (ex: "Tableau de bord RGPH-5") */
+    .rgph-sidebar .menu-title span {
+        color: rgba(255, 255, 255, 0.5) !important;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+
+    /* Style par défaut des liens */
+    .rgph-sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.75) !important;
+        font-size: 15px;
+        margin: 5px 15px;
+        padding: 10px 15px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    /* Icônes par défaut */
+    .rgph-sidebar .nav-link i {
+        color: rgba(255, 255, 255, 0.75) !important;
+        font-size: 20px;
+        transition: all 0.3s ease;
+    }
+
+    /* Effet au survol (Hover) */
+    .rgph-sidebar .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+        transform: translateX(5px);
+    }
+    .rgph-sidebar .nav-link:hover i {
+        color: #ffffff !important;
+    }
+
+    /* ETAT ACTIF : Style "Pill" blanc avec texte vert */
+    .rgph-sidebar .nav-link.active {
+        background: #ffffff !important;
+        color: #20be3d !important;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .rgph-sidebar .nav-link.active i {
+        color: #20be3d !important;
+    }
+</style>
